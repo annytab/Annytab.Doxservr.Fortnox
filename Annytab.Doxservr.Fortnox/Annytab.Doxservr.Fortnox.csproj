@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <NeutralLanguage>English</NeutralLanguage>
+    <AssemblyName>Annytab.Doxservr.Fortnox</AssemblyName>
+    <RootNamespace>Annytab.Doxservr.Fortnox</RootNamespace>
+    <Authors>A Name Not Yet Taken AB</Authors>
+    <Company>A Name Not Yet Taken AB</Company>
+    <Product>a-doxservr-fortnox</Product>
+    <Description>This is a console application that synchronizes electronic documents between Doxservr (www.doxservr.com) and Fortnox (www.fortnox.se). This application imports offers, orders, invoices and credit invoices to Fortnox from Doxservr and sends offers, orders, invoices and credit invoices from Fortnox via Doxservr to receivers. This application only handles electronic documents that has been createad with the Annytab Dox Trade standard.</Description>
+    <Copyright>Copyright © 2017</Copyright>
+    <PackageIconUrl>http://www.annytab.com/annytab_logo_512x512.png</PackageIconUrl>
+    <PackageTags>ASP.NET, .NET, Core, C#, Doxservr, Fortnox</PackageTags>
+    <PackageReleaseNotes>This is the first release.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="appsettings.template.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Annytab.Dox.Standards" Version="1.0.0" />
+    <PackageReference Include="Annytab.Doxservr.Client" Version="1.0.0" />
+    <PackageReference Include="Annytab.Fortnox.Client" Version="1.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore" Version="2.0.0" />
+    <PackageReference Include="Serilog.Extensions.Logging.File" Version="1.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="run.cmd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Logs\" />
+  </ItemGroup>
+
+</Project>

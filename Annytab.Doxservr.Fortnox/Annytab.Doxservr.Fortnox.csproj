@@ -14,6 +14,8 @@
     <PackageIconUrl>http://www.annytab.com/annytab_logo_512x512.png</PackageIconUrl>
     <PackageTags>ASP.NET, .NET, Core, C#, Doxservr, Fortnox</PackageTags>
     <PackageReleaseNotes>This is the first release.</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/annytab/a-doxservr-fortnox</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/annytab/a-doxservr-fortnox/blob/master/LICENSE</PackageLicenseUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -34,9 +36,6 @@
 
   <ItemGroup>
     <None Update="appsettings.development.json">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-    <None Update="appsettings.json">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
     <None Update="appsettings.template.json">

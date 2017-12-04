@@ -1,2 +1,2 @@
 @echo off
-dotnet Annytab.Doxservr.Fortnox.dll
+dotnet Annytab.Doxservr.Fortnox.dll "D:\\home\\AnnytabDoxservrFortnox"

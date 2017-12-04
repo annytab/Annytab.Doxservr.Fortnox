@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using Annytab.Fortnox.Client.V3;
 
@@ -42,11 +43,24 @@ namespace Annytab.Doxservr.Fortnox
             // Create variables
             bool success = true;
             string path = this.directory + "\\appsettings.json";
-            FileStream file_stream = null;
-            StreamReader stream_reader = null;
+            IList<string> folders = new List<string>
+            {
+                this.directory + "\\Files\\Imported",
+                this.directory + "\\Files\\Exported",
+                this.directory + "\\Files\\Meta\\Imported"
+            };
+            
+            // Make sure that directories exists
+            foreach(string folder in folders)
+            {
+                if (System.IO.Directory.Exists(folder) == false)
+                {
+                    Directory.CreateDirectory(folder);
+                }
+            }
 
             // Make sure that the file exists
-            if(System.IO.File.Exists(path) == false)
+            if (System.IO.File.Exists(path) == false)
             {
                 LogError($"File not found: {path}, create a new appsettings.json file from appsettings.template.json!");
                 return false;
@@ -54,19 +68,12 @@ namespace Annytab.Doxservr.Fortnox
 
             try
             {
-                // Create a file stream
-                file_stream = System.IO.File.Open(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-
-                // Create a stream reader
-                stream_reader = new StreamReader(file_stream, Encoding.UTF8);
-
                 // Get the data
-                string data = stream_reader.ReadToEnd();
+                string data = System.IO.File.ReadAllText(path, Encoding.UTF8);
 
                 // Convert data to app settings
                 AppSettings app_settings = JsonConvert.DeserializeObject<AppSettings>(data);
                 
-
                 // Check for errors
                 if (app_settings.DoxservrOptions.ApiHost == "" || app_settings.DoxservrOptions.ApiEmail == "" || app_settings.DoxservrOptions.ApiPassword == ""
                     || app_settings.FortnoxOptions.ClientId == "" || app_settings.FortnoxOptions.ClientSecret == ""
@@ -74,9 +81,9 @@ namespace Annytab.Doxservr.Fortnox
                 {
                     // Log the error
                     success = false;
-                    LogError("You need to set values for ApiOptions in appsettings.json!");                   
+                    LogError("You need to set values for api:s in appsettings.json!");
                 }
-                else if (app_settings.FortnoxOptions.AccessToken == "")
+                else if (string.IsNullOrEmpty(app_settings.FortnoxOptions.AccessToken) == true)
                 {
                     // Get an access token from fortnox
                     AuthorizationResponse response = await FortnoxRepository.GetAccessToken(app_settings.FortnoxOptions.AuthorizationCode, app_settings.FortnoxOptions.ClientSecret);
@@ -87,14 +94,8 @@ namespace Annytab.Doxservr.Fortnox
                         // Set the access token in app settings
                         app_settings.FortnoxOptions.AccessToken = response.message;
 
-                        // Get a byte array
-                        byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(app_settings, Formatting.Indented));
-
-                        // Write bytes to the file stream
-                        file_stream.Seek(0, SeekOrigin.Begin);
-                        file_stream.SetLength(0);
-                        file_stream.Flush();
-                        file_stream.Write(bytes, 0, bytes.Length);
+                        // Write updated application settings to the file
+                        System.IO.File.WriteAllText(path, JsonConvert.SerializeObject(app_settings, Formatting.Indented));
                     }
                     else
                     {
@@ -108,17 +109,6 @@ namespace Annytab.Doxservr.Fortnox
                 // Log the exception
                 success = false;
                 LogError(ex.ToString());
-            }
-            finally
-            {
-                if(file_stream != null)
-                {
-                    file_stream.Dispose();
-                }
-                if(stream_reader != null)
-                {
-                    stream_reader.Dispose();
-                }
             }
 
             // Return the success boolean

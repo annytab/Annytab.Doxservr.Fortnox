@@ -13,6 +13,7 @@ namespace Annytab.Doxservr.Fortnox
         public Logging Logging { get; set; }
         public DoxservrOptions DoxservrOptions { get; set; }
         public FortnoxOptions FortnoxOptions { get; set; }
+        public DefaultValues DefaultValues { get; set; }
 
         #endregion
 
@@ -27,6 +28,7 @@ namespace Annytab.Doxservr.Fortnox
             this.Logging = new Logging();
             this.DoxservrOptions = new DoxservrOptions();
             this.FortnoxOptions = new FortnoxOptions();
+            this.DefaultValues = new DefaultValues();
 
         } // End of the constructor
 

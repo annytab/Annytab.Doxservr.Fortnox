@@ -3,11 +3,11 @@
 namespace Annytab.Doxservr.Fortnox
 {
     /// <summary>
-    /// This interface represent a worker repository
+    /// This interface represents a worker repository
     /// </summary>
     public interface IWorkerRepository
     {
-        Task Run();
+        Task Run(string directory);
 
     } // End of the interface
 

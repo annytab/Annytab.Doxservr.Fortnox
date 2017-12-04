@@ -9,7 +9,7 @@
     <Authors>A Name Not Yet Taken AB</Authors>
     <Company>A Name Not Yet Taken AB</Company>
     <Product>a-doxservr-fortnox</Product>
-    <Description>This is a console application that synchronizes electronic documents between Doxservr (www.doxservr.com) and Fortnox (www.fortnox.se). This application imports offers, orders, invoices and credit invoices to Fortnox from Doxservr and sends offers, orders, invoices and credit invoices from Fortnox via Doxservr to receivers. This application only handles electronic documents that has been createad with the Annytab Dox Trade standard.</Description>
+    <Description>This is a console application that synchronizes electronic documents between Doxservr (www.doxservr.com) and Fortnox (www.fortnox.se). This application imports offers, orders, invoices and credit invoices to Fortnox from Doxservr and sends offers, orders, invoices and credit invoices from Fortnox through Doxservr to receivers. This application only handles electronic documents that has been createad with the Annytab Dox Trade standard.</Description>
     <Copyright>Copyright © 2017</Copyright>
     <PackageIconUrl>http://www.annytab.com/annytab_logo_512x512.png</PackageIconUrl>
     <PackageTags>ASP.NET, .NET, Core, C#, Doxservr, Fortnox</PackageTags>
@@ -25,30 +25,29 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="appsettings.template.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Annytab.Dox.Standards" Version="1.0.0" />
-    <PackageReference Include="Annytab.Doxservr.Client" Version="1.0.0" />
-    <PackageReference Include="Annytab.Fortnox.Client" Version="1.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore" Version="2.0.0" />
+    <PackageReference Include="Annytab.Dox.Standards" Version="1.0.2" />
+    <PackageReference Include="Annytab.Doxservr.Client" Version="1.0.3" />
+    <PackageReference Include="Annytab.Fortnox.Client" Version="1.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore" Version="2.0.1" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="1.1.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettings.development.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.template.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="run.cmd">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Logs\" />
+    <None Update="settings.job">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

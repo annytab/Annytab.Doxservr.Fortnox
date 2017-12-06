@@ -9,6 +9,7 @@ namespace Annytab.Doxservr.Fortnox
     {
         #region Variables
 
+        public string BaseCurrency { get; set; }
         public string PriceList { get; set; }
         public decimal PenaltyInterest { get; set; }
         public string SalesVatTypeSE { get; set; }
@@ -35,6 +36,7 @@ namespace Annytab.Doxservr.Fortnox
         public DefaultValues()
         {
             // Set values for instance variables
+            this.BaseCurrency = "SEK";
             this.PriceList = "";
             this.PenaltyInterest = 0M;
             this.SalesVatTypeSE = "";

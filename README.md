@@ -9,13 +9,14 @@ that has been createad with the Annytab Dox Trade standard.
 Decide on a directory that should be used to contain the appsettings.json file and to which files and logs should be 
 saved. The default directory is "D:\\home\\AnnytabDoxservrFortnox" and this directory will work for a web job on 
 Azure. You can choose any directory to contain files for the application but you have to add the directory path 
-as an argument when you start the program if it is different from the default directory. 
+as an argument when you start the program (if the directory path is different from the default directory). 
 
 Copy/Paste the appsettings.template.json file and rename the new file to appsettings.json. Save the created appsettings.json file in the 
 last folder of your selected directory. You need to edit the settings in the appsettings.json file before you run the program. 
 You can optionally add a appsettings.development.json file to the directory folder if you are testing the program 
 locally, you need to manually add the AccessToken (FortnoxOptions) to the appsettings.development.json, the AccessToken is 
-always written to the appsettings.json file only.
+always written to the appsettings.json file only. You can use the ClientSecret that is set in FortnoxOptions, search for the 
+integration in Fortnox by the ClientId.
 
 ### DoxservrOptions
 - **ApiHost:** The doxservr base url, https://www.doxservr.com or https://www.doxservr.se.
@@ -31,6 +32,7 @@ s used once to get the access token.
 AuthorizationCode (API-kod).
 
 ### DefaultValues
+- **BaseCurrency:** A 3-letter currency code according to ISO 4217 that represents the reporting currency, used to update currency rates. Fortnox only allows this to be SEK at the moment.
 - **PriceList:** The default Fortnox price list you use for new articles and new customers that are created from this program.
 - **PenaltyInterest:** The penalty interest expressed on exported offers, orders and invoices. 10 % is expressed as 0.1 (decimal).
 - **SalesVatTypeSE:** The default vat type for customers can be SEVAT or SEREVERSEDVAT, used when a new customer is created.

@@ -13,9 +13,10 @@
     <Copyright>Copyright © 2017</Copyright>
     <PackageIconUrl>http://www.annytab.com/annytab_logo_512x512.png</PackageIconUrl>
     <PackageTags>ASP.NET, .NET, Core, C#, Doxservr, Fortnox</PackageTags>
-    <PackageReleaseNotes>This is the first release.</PackageReleaseNotes>
+    <PackageReleaseNotes>Added BaseCurrency to application settings.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/annytab/a-doxservr-fortnox</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/annytab/a-doxservr-fortnox/blob/master/LICENSE</PackageLicenseUrl>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

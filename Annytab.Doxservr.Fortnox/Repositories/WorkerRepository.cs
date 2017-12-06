@@ -529,10 +529,13 @@ namespace Annytab.Doxservr.Fortnox
             client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
             client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("*"));
 
+            // Get the base currency
+            string base_currency = string.IsNullOrEmpty(this.default_values.BaseCurrency) == false ? this.default_values.BaseCurrency : "SEK";
+
             try
             {
                 // Get the response
-                HttpResponseMessage response = await client.GetAsync($"/latest?base=SEK");
+                HttpResponseMessage response = await client.GetAsync($"/latest?base={base_currency}");
 
                 // Get the data
                 if (response.IsSuccessStatusCode == true)

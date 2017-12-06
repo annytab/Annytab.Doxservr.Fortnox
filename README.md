@@ -15,7 +15,7 @@ Copy/Paste the appsettings.template.json file and rename the new file to appsett
 last folder of your selected directory. You need to edit the settings in the appsettings.json file before you run the program. 
 You can optionally add a appsettings.development.json file to the directory folder if you are testing the program 
 locally, you need to manually add the AccessToken (FortnoxOptions) to the appsettings.development.json, the AccessToken is 
-always written to the appsettings.json file only. You can use the ClientSecret that is set in FortnoxOptions, search for the 
+always written to the appsettings.json file only. You can use the ClientSecret that is set in FortnoxOptions (appsettings.template.json), search for the 
 integration in Fortnox by the ClientId.
 
 ### DoxservrOptions

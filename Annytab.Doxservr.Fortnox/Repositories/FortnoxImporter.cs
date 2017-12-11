@@ -344,9 +344,10 @@ namespace Annytab.Doxservr.Fortnox
             // Create variables
             CustomerRoot root = null;
             bool customer_exists = false;
+            string customer_email = doc.buyer_information != null && string.IsNullOrEmpty(doc.buyer_information.email) == false ? doc.buyer_information.email : dox_email;
 
             // Find the customer on email
-            CustomersRoot customers_root = await this.fortnox_repository.Get<CustomersRoot>(client, $"customers?email={dox_email}");
+            CustomersRoot customers_root = await this.fortnox_repository.Get<CustomersRoot>(client, $"customers?email={customer_email}");
             if (customers_root != null && customers_root.Customers != null && customers_root.Customers.Count > 0)
             {
                 root = await this.fortnox_repository.Get<CustomerRoot>(client, $"customers/{customers_root.Customers[0].CustomerNumber}");
@@ -363,7 +364,7 @@ namespace Annytab.Doxservr.Fortnox
             }
 
             // Update the customer: ONLY SET VAT TYPE, ACCOUNT IS SET IN ARTICLE
-            root.Customer.Email = dox_email;
+            root.Customer.Email = customer_email;
             if (doc.seller_information != null)
             {
                 root.Customer.OurReference = string.IsNullOrEmpty(root.Customer.OurReference) == true ? doc.seller_information.contact_name : root.Customer.OurReference;
@@ -380,12 +381,9 @@ namespace Annytab.Doxservr.Fortnox
                 root.Customer.ZipCode = string.IsNullOrEmpty(doc.buyer_information.postcode) == false ? doc.buyer_information.postcode : root.Customer.ZipCode;
                 root.Customer.City = string.IsNullOrEmpty(doc.buyer_information.city_name) == false ? doc.buyer_information.city_name : root.Customer.City;
                 root.Customer.CountryCode = string.IsNullOrEmpty(doc.buyer_information.country_code) == false ? doc.buyer_information.country_code : root.Customer.CountryCode;
-                if(string.IsNullOrEmpty(doc.buyer_information.email) == false)
-                {
-                    root.Customer.EmailOffer = string.IsNullOrEmpty(root.Customer.EmailOffer) == true ? doc.buyer_information.email : root.Customer.EmailOffer;
-                    root.Customer.EmailOrder = string.IsNullOrEmpty(root.Customer.EmailOrder) == true ? doc.buyer_information.email : root.Customer.EmailOrder;
-                    root.Customer.EmailInvoice = string.IsNullOrEmpty(root.Customer.EmailInvoice) == true ? doc.buyer_information.email : root.Customer.EmailInvoice;
-                }
+                root.Customer.EmailOffer = string.IsNullOrEmpty(root.Customer.EmailOffer) == true ? customer_email : root.Customer.EmailOffer;
+                root.Customer.EmailOrder = string.IsNullOrEmpty(root.Customer.EmailOrder) == true ? customer_email : root.Customer.EmailOrder;
+                root.Customer.EmailInvoice = string.IsNullOrEmpty(root.Customer.EmailInvoice) == true ? customer_email : root.Customer.EmailInvoice;
             }
             if(doc.delivery_information != null)
             {
@@ -428,9 +426,10 @@ namespace Annytab.Doxservr.Fortnox
             // Create variables
             SupplierRoot root = null;
             bool supplier_exists = false;
+            string supplier_email = doc.seller_information != null && string.IsNullOrEmpty(doc.seller_information.email) == false ? doc.seller_information.email : dox_email;
 
             // Find the supplier on email
-            SuppliersRoot suppliers_root = await this.fortnox_repository.Get<SuppliersRoot>(client, $"suppliers?email={dox_email}");
+            SuppliersRoot suppliers_root = await this.fortnox_repository.Get<SuppliersRoot>(client, $"suppliers?email={supplier_email}");
             if (suppliers_root != null && suppliers_root.Suppliers != null && suppliers_root.Suppliers.Count > 0)
             {
                 root = await this.fortnox_repository.Get<SupplierRoot>(client, $"suppliers/{suppliers_root.Suppliers[0].SupplierNumber}");
@@ -447,7 +446,7 @@ namespace Annytab.Doxservr.Fortnox
             }
 
             // Update the supplier
-            root.Supplier.Email = dox_email;
+            root.Supplier.Email = supplier_email;
             if (doc.buyer_information != null)
             {
                 root.Supplier.OurReference = string.IsNullOrEmpty(root.Supplier.OurReference) == true ? doc.buyer_information.contact_name : root.Supplier.OurReference;
@@ -464,7 +463,6 @@ namespace Annytab.Doxservr.Fortnox
                 root.Supplier.ZipCode = string.IsNullOrEmpty(doc.seller_information.postcode) == false ? doc.seller_information.postcode : root.Supplier.ZipCode;
                 root.Supplier.City = string.IsNullOrEmpty(doc.seller_information.city_name) == false ? doc.seller_information.city_name : root.Supplier.City;
                 root.Supplier.CountryCode = string.IsNullOrEmpty(doc.seller_information.country_code) == false ? doc.seller_information.country_code : root.Supplier.CountryCode;
-                root.Supplier.Fax = string.IsNullOrEmpty(root.Supplier.Fax) == true ? doc.seller_information.email : root.Supplier.Fax;
             }
             root.Supplier.Currency = string.IsNullOrEmpty(doc.currency_code) == false ? doc.currency_code : root.Supplier.Currency;
             root.Supplier.TermsOfPayment = string.IsNullOrEmpty(doc.terms_of_payment) == false ? doc.terms_of_payment : root.Supplier.TermsOfPayment;
@@ -834,8 +832,8 @@ namespace Annytab.Doxservr.Fortnox
                     Description = row.product_name,
                     Quantity = row.quantity,
                     Price = row.unit_price,
-                    Unit = row.unit_code,
-                    VAT = row.vat_rate != null ? row.vat_rate * 100 : null
+                    Unit = article_root != null ? article_root.Article.Unit : row.unit_code,
+                    VAT = article_root == null && row.vat_rate != null ? row.vat_rate * 100 : null
                 });
 
                 // Check if there is sub rows
@@ -877,8 +875,8 @@ namespace Annytab.Doxservr.Fortnox
                     OrderedQuantity = row.quantity,
                     DeliveredQuantity = row.quantity,
                     Price = row.unit_price,
-                    Unit = row.unit_code,
-                    VAT = row.vat_rate != null ? row.vat_rate * 100 : null
+                    Unit = article_root != null ? article_root.Article.Unit : row.unit_code,
+                    VAT = article_root == null && row.vat_rate != null ? row.vat_rate * 100 : null
                 });
 
                 // Check if there is sub rows
@@ -919,7 +917,8 @@ namespace Annytab.Doxservr.Fortnox
                     Account = article_root == null ? this.default_values.PurchaseAccount : null,
                     ItemDescription = row.product_name,
                     Quantity = row.quantity,
-                    Price = row.unit_price
+                    Price = row.unit_price,
+                    Unit = article_root != null ? article_root.Article.Unit : row.unit_code      
                 });
 
                 // Check if there is sub rows

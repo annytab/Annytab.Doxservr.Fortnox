@@ -298,10 +298,25 @@ namespace Annytab.Doxservr.Fortnox
                 // Move files if no error was encountered
                 if(error == false)
                 {
+                    // Create destination paths
+                    string meta_destination = directory + $"\\Files\\Meta\\Imported\\{post.id}.json";
+                    string file_destination = directory + $"\\Files\\Imported\\{post.id}.json";
+
                     try
                     {
-                        System.IO.Directory.Move(meta_path, directory + $"\\Files\\Meta\\Imported\\{post.id}.json");
-                        System.IO.Directory.Move(file_path, directory + $"\\Files\\Imported\\{post.id}.json");
+                        // Delete destination files if the exists
+                        if(System.IO.File.Exists(meta_destination) == true)
+                        {
+                            System.IO.File.Delete(meta_destination);
+                        }
+                        if(System.IO.File.Exists(file_destination) == true)
+                        {
+                            System.IO.File.Delete(file_destination);
+                        }
+
+                        // Move files
+                        System.IO.Directory.Move(meta_path, meta_destination);
+                        System.IO.Directory.Move(file_path, file_destination);
                     }
                     catch (Exception ex)
                     {

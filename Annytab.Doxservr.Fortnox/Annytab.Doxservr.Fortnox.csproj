@@ -13,10 +13,10 @@
     <Copyright>Copyright © 2017</Copyright>
     <PackageIconUrl>http://www.annytab.com/annytab_logo_512x512.png</PackageIconUrl>
     <PackageTags>ASP.NET, .NET, Core, C#, Doxservr, Fortnox</PackageTags>
-    <PackageReleaseNotes>Updated the email used to import customers and suppliers. Updated the Unit and VAT used when importing rows. Updated the movement of files to not cast an exception if the file exists in the destination folder.</PackageReleaseNotes>
+    <PackageReleaseNotes>Never set VAT for rows imported to Fortnox.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/annytab/a-doxservr-fortnox</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/annytab/a-doxservr-fortnox/blob/master/LICENSE</PackageLicenseUrl>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

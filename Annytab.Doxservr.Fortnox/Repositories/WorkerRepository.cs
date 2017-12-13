@@ -218,6 +218,16 @@ namespace Annytab.Doxservr.Fortnox
 
                 // Get the file
                 string file_path = directory + "\\Files\\" + post.id + CommonTools.GetExtensions(post.filename);
+
+                // Make sure that the file exists
+                if(System.IO.File.Exists(file_path) == false)
+                {
+                    // Log the error
+                    this.logger.LogError($"File not found: {file_path}.");
+                    continue;
+                }
+
+                // Get the document
                 AnnytabDoxTrade doc = JsonConvert.DeserializeObject<AnnytabDoxTrade>(System.IO.File.ReadAllText(file_path, CommonTools.GetEncoding(post.file_encoding, Encoding.UTF8)));
 
                 // Create an error variable
@@ -237,6 +247,11 @@ namespace Annytab.Doxservr.Fortnox
                         // Log the error
                         error = true;
                         this.logger.LogError($"Offer, {post.id}.json was not imported to Fortnox.");
+                    }
+                    else
+                    {
+                        // Log information
+                        this.logger.LogInformation($"Offer, {post.id}.json was imported to Fortnox.");
                     }
                 }
                 else if (doc.document_type == "quotation")
@@ -258,6 +273,11 @@ namespace Annytab.Doxservr.Fortnox
                         error = true;
                         this.logger.LogError($"Order, {post.id}.json was not imported to Fortnox.");
                     }
+                    else
+                    {
+                        // Log information
+                        this.logger.LogInformation($"Order, {post.id}.json was imported to Fortnox.");
+                    }
                 }
                 else if (doc.document_type == "order_confirmation")
                 {
@@ -278,6 +298,11 @@ namespace Annytab.Doxservr.Fortnox
                         error = true;
                         this.logger.LogError($"Supplier invoice, {post.id}.json was not imported to Fortnox.");
                     }
+                    else
+                    {
+                        // Log information
+                        this.logger.LogInformation($"Supplier invoice, {post.id}.json was imported to Fortnox.");
+                    }
                 }
                 else if (doc.document_type == "credit_invoice")
                 {
@@ -292,6 +317,11 @@ namespace Annytab.Doxservr.Fortnox
                         // Log the error
                         error = true;
                         this.logger.LogError($"Supplier credit invoice, {post.id}.json was not imported to Fortnox.");
+                    }
+                    else
+                    {
+                        // Log information
+                        this.logger.LogInformation($"Supplier credit invoice, {post.id}.json was imported to Fortnox.");
                     }
                 }
 

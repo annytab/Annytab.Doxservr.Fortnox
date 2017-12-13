@@ -832,8 +832,7 @@ namespace Annytab.Doxservr.Fortnox
                     Description = row.product_name,
                     Quantity = row.quantity,
                     Price = row.unit_price,
-                    Unit = article_root != null ? article_root.Article.Unit : row.unit_code,
-                    VAT = article_root == null && row.vat_rate != null ? row.vat_rate * 100 : null
+                    Unit = article_root != null ? article_root.Article.Unit : row.unit_code
                 });
 
                 // Check if there is sub rows
@@ -875,8 +874,7 @@ namespace Annytab.Doxservr.Fortnox
                     OrderedQuantity = row.quantity,
                     DeliveredQuantity = row.quantity,
                     Price = row.unit_price,
-                    Unit = article_root != null ? article_root.Article.Unit : row.unit_code,
-                    VAT = article_root == null && row.vat_rate != null ? row.vat_rate * 100 : null
+                    Unit = article_root != null ? article_root.Article.Unit : row.unit_code
                 });
 
                 // Check if there is sub rows

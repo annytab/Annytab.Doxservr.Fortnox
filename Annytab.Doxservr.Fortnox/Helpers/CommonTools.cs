@@ -49,7 +49,7 @@ namespace Annytab.Doxservr.Fortnox
 
             if (invoice_country_code == "SE" && delivery_country_code == "SE")
             {
-                if(customer.VATType != "SEREVERSEDVAT")
+                if(customer.VATType == "SEREVERSEDVAT")
                 {
                     vat_type = "SEREVERSEDVAT";
                 }

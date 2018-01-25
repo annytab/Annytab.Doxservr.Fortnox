@@ -13,10 +13,10 @@
     <Copyright>Copyright © 2017</Copyright>
     <PackageIconUrl>http://www.annytab.com/annytab_logo_512x512.png</PackageIconUrl>
     <PackageTags>ASP.NET, .NET, Core, C#, Doxservr, Fortnox</PackageTags>
-    <PackageReleaseNotes>Never set VAT for rows imported to Fortnox.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed bug with GetCustomerVatType.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/annytab/a-doxservr-fortnox</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/annytab/a-doxservr-fortnox/blob/master/LICENSE</PackageLicenseUrl>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -28,7 +28,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Annytab.Dox.Standards" Version="1.0.2" />
+    <PackageReference Include="Annytab.Dox.Standards" Version="1.0.3" />
     <PackageReference Include="Annytab.Doxservr.Client" Version="1.0.3" />
     <PackageReference Include="Annytab.Fortnox.Client" Version="1.0.3" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.0.1" />

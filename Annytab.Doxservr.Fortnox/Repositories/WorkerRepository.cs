@@ -125,14 +125,38 @@ namespace Annytab.Doxservr.Fortnox
             // Loop file metadata posts
             foreach (FileMetadata post in files)
             {
-                // Save the file to disk
-                using (FileStream file_stream = System.IO.File.OpenWrite(directory + "\\Files\\" + post.id + CommonTools.GetExtensions(post.filename)))
-                {
-                    await this.files_repository.GetFile(dox_client, post.id, file_stream);
-                }
+                // File stream
+                FileStream file_stream = null;
 
-                // Save metadata to disk
-                System.IO.File.WriteAllText(directory + "\\Files\\Meta\\" + post.id + ".json", JsonConvert.SerializeObject(post));
+                try
+                {
+                    // Create a file stream
+                    file_stream = System.IO.File.OpenWrite(directory + "\\Files\\" + post.id + CommonTools.GetExtensions(post.filename));
+
+                    // Get the file
+                    if(await this.files_repository.GetFile(dox_client, post.id, file_stream) == false)
+                    {
+                        // Continue with the loop, the file was not downloaded
+                        continue;
+                    }
+
+                    // Save metadata to disk
+                    System.IO.File.WriteAllText(directory + "\\Files\\Meta\\" + post.id + ".json", JsonConvert.SerializeObject(post));
+                }
+                catch(Exception ex)
+                {
+                    // Log the error
+                    this.logger.LogError(ex, $"Save files to disk: {post.id}", null);
+                    continue;
+                }
+                finally
+                {
+                    // Dispose of the stream
+                    if(file_stream != null)
+                    {
+                        file_stream.Dispose();
+                    }
+                }
             }
 
             // Create a list with accounts
@@ -173,14 +197,43 @@ namespace Annytab.Doxservr.Fortnox
 
             // Get downloaded metadata files
             string[] metadata_files = System.IO.Directory.GetFiles(directory + "\\Files\\Meta\\");
-            Int32 length = metadata_files != null ? metadata_files.Length : 0;
 
             // Loop metadata files
             foreach(string meta_path in metadata_files)
             {
-                // Get the meta data
-                FileMetadata post = JsonConvert.DeserializeObject<FileMetadata>(System.IO.File.ReadAllText(meta_path, Encoding.UTF8));
+                // Metadata
+                FileMetadata post = null;
 
+                try
+                {
+                    // Get the meta data
+                    string meta_data = System.IO.File.ReadAllText(meta_path, Encoding.UTF8);
+
+                    // Make sure that there is meta data
+                    if (string.IsNullOrEmpty(meta_data) == true)
+                    {
+                        this.logger.LogError($"File is empty: {meta_path}");
+                        continue;
+                    }
+
+                    // Get the post
+                    post = JsonConvert.DeserializeObject<FileMetadata>(meta_data);
+                }
+                catch (Exception ex)
+                {
+                    // Log the error
+                    this.logger.LogError(ex, $"Deserialize file: {meta_path}", null);
+                    continue;
+                }
+
+                // Make sure that the post not is null
+                if(post == null)
+                {
+                    // Log the error
+                    this.logger.LogError($"Post is null: {meta_path}", null);
+                    continue;
+                }
+                
                 // Get the sender
                 Party sender = null;
                 foreach (Party party in post.parties)
@@ -216,7 +269,7 @@ namespace Annytab.Doxservr.Fortnox
                     }
                 }
 
-                // Get the file
+                // Get the file path
                 string file_path = directory + "\\Files\\" + post.id + CommonTools.GetExtensions(post.filename);
 
                 // Make sure that the file exists
@@ -227,8 +280,39 @@ namespace Annytab.Doxservr.Fortnox
                     continue;
                 }
 
-                // Get the document
-                AnnytabDoxTrade doc = JsonConvert.DeserializeObject<AnnytabDoxTrade>(System.IO.File.ReadAllText(file_path, CommonTools.GetEncoding(post.file_encoding, Encoding.UTF8)));
+                // Document
+                AnnytabDoxTrade doc = null;
+
+                try
+                {
+                    // Get file data
+                    string file_data = System.IO.File.ReadAllText(file_path, CommonTools.GetEncoding(post.file_encoding, Encoding.UTF8));
+
+                    // Make sure that there is file data
+                    if(string.IsNullOrEmpty(file_data) == true)
+                    {
+                        // Log the error
+                        this.logger.LogError($"File is empty: {file_path}.");
+                        continue;
+                    }
+
+                    // Get the document
+                    doc = JsonConvert.DeserializeObject<AnnytabDoxTrade>(file_data);
+                }
+                catch(Exception ex)
+                {
+                    // Log the error
+                    this.logger.LogError(ex, $"Deserialize file: {file_path}", null);
+                    continue;
+                }
+
+                // Make sure that the document not is null
+                if (doc == null)
+                {
+                    // Log the error
+                    this.logger.LogError($"Post is null: {file_path}", null);
+                    continue;
+                }
 
                 // Create an error variable
                 bool error = false;
@@ -390,29 +474,44 @@ namespace Annytab.Doxservr.Fortnox
                         continue;
                     }
 
+                    // Make sure that there is an email address
+                    if (string.IsNullOrEmpty(root.email) == true)
+                    {
+                        this.logger.LogError($"Offer: {root.document.id}, no email specified!");
+                        continue;
+                    }
+
                     // Variables
                     string data = JsonConvert.SerializeObject(root.document);
                     string filename = $"{root.document_type}_{root.document.id}.json";
                     string language_code = string.IsNullOrEmpty(root.language_code) == false ? root.language_code.ToLower() : "en";
                     FileMetadata file_metadata = null;
 
-                    // Send the document
-                    using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(data)))
+                    try
                     {
-                        file_metadata = await this.files_repository.Send(dox_client, stream, root.email, filename, "utf-8", "Annytab Dox Trade v1", language_code, "1");
+                        // Send the document
+                        using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(data)))
+                        {
+                            file_metadata = await this.files_repository.Send(dox_client, stream, root.email, filename, "utf-8", "Annytab Dox Trade v1", language_code, "1");
+                        }
+
+                        // Make sure that the file has been sent
+                        if (file_metadata != null)
+                        {
+                            // Save the file
+                            System.IO.File.WriteAllText(directory + $"\\Files\\Exported\\{filename}", data, Encoding.UTF8);
+
+                            // Mark the offer as sent
+                            await this.fortnox_repository.Action<OfferRoot>(nox_client, $"offers/{root.document.id}/externalprint");
+
+                            // Log information
+                            this.logger.LogInformation($"Offer, {filename} has been sent to {root.email}!");
+                        }
                     }
-
-                    // Make sure that the file has been sent
-                    if (file_metadata != null)
+                    catch(Exception ex)
                     {
-                        // Save the file
-                        System.IO.File.WriteAllText(directory + $"\\Files\\Exported\\{filename}", data, Encoding.UTF8);
-
-                        // Mark the offer as sent
-                        await this.fortnox_repository.Action<OfferRoot>(nox_client, $"offers/{root.document.id}/externalprint");
-
-                        // Log information
-                        this.logger.LogInformation($"Offer, {filename} has been sent to {root.email}!");
+                        // Log the exception
+                        this.logger.LogError(ex, $"Offer: {root.document.id}", null);
                     }
                 }
             }
@@ -442,33 +541,48 @@ namespace Annytab.Doxservr.Fortnox
                     bool marked_as_sent = false;
                     foreach (AnnytabDoxTradeRoot root in roots)
                     {
+                        // Make sure that there is an email address
+                        if (string.IsNullOrEmpty(root.email) == true)
+                        {
+                            this.logger.LogError($"Order: {root.document.id}, no email specified!");
+                            continue;
+                        }
+
                         // Variables
                         string data = JsonConvert.SerializeObject(root.document);
                         string filename = $"{root.document_type}_{root.document.id}.json";
                         string language_code = string.IsNullOrEmpty(root.language_code) == false ? root.language_code.ToLower() : "en";
                         FileMetadata file_metadata = null;
 
-                        // Send the document
-                        using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(data)))
+                        try
                         {
-                            file_metadata = await this.files_repository.Send(dox_client, stream, root.email, filename, "utf-8", "Annytab Dox Trade v1", language_code, "1");
-                        }
-
-                        // Make sure that the file has been sent
-                        if (file_metadata != null)
-                        {
-                            // Save the file
-                            System.IO.File.WriteAllText(directory + $"\\Files\\Exported\\{filename}", data, Encoding.UTF8);
-
-                            // Mark the order as sent
-                            if (marked_as_sent == false)
+                            // Send the document
+                            using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(data)))
                             {
-                                await this.fortnox_repository.Action<OrderRoot>(nox_client, $"orders/{root.document.id}/externalprint");
-                                marked_as_sent = true;
+                                file_metadata = await this.files_repository.Send(dox_client, stream, root.email, filename, "utf-8", "Annytab Dox Trade v1", language_code, "1");
                             }
 
-                            // Log information
-                            this.logger.LogInformation($"Order, {filename} has been sent to {root.email}!");
+                            // Make sure that the file has been sent
+                            if (file_metadata != null)
+                            {
+                                // Save the file
+                                System.IO.File.WriteAllText(directory + $"\\Files\\Exported\\{filename}", data, Encoding.UTF8);
+
+                                // Mark the order as sent
+                                if (marked_as_sent == false)
+                                {
+                                    await this.fortnox_repository.Action<OrderRoot>(nox_client, $"orders/{root.document.id}/externalprint");
+                                    marked_as_sent = true;
+                                }
+
+                                // Log information
+                                this.logger.LogInformation($"Order, {filename} has been sent to {root.email}!");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Log the exception
+                            this.logger.LogError(ex, $"Order: {root.document.id}", null);
                         }
                     }
                 }
@@ -495,29 +609,44 @@ namespace Annytab.Doxservr.Fortnox
                         continue;
                     }
 
+                    // Make sure that there is an email address
+                    if (string.IsNullOrEmpty(root.email) == true)
+                    {
+                        this.logger.LogError($"Invoice: {root.document.id}, no email specified!");
+                        continue;
+                    }
+
                     // Variables
                     string data = JsonConvert.SerializeObject(root.document);
                     string filename = $"{root.document_type}_{root.document.id}.json";
                     string language_code = string.IsNullOrEmpty(root.language_code) == false ? root.language_code.ToLower() : "en";
                     FileMetadata file_metadata = null;
 
-                    // Send the document
-                    using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(data)))
+                    try
                     {
-                        file_metadata = await this.files_repository.Send(dox_client, stream, root.email, filename, "utf-8", "Annytab Dox Trade v1", language_code, "1");
+                        // Send the document
+                        using (MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(data)))
+                        {
+                            file_metadata = await this.files_repository.Send(dox_client, stream, root.email, filename, "utf-8", "Annytab Dox Trade v1", language_code, "1");
+                        }
+
+                        // Make sure that the file has been sent
+                        if (file_metadata != null)
+                        {
+                            // Save the file
+                            System.IO.File.WriteAllText(directory + $"\\Files\\Exported\\{filename}", data, Encoding.UTF8);
+
+                            // Mark the invoice as sent
+                            await this.fortnox_repository.Action<InvoiceRoot>(nox_client, $"invoices/{root.document.id}/externalprint");
+
+                            // Log information
+                            this.logger.LogInformation($"Invoice, {filename} has been sent to {root.email}!");
+                        }
                     }
-
-                    // Make sure that the file has been sent
-                    if (file_metadata != null)
+                    catch (Exception ex)
                     {
-                        // Save the file
-                        System.IO.File.WriteAllText(directory + $"\\Files\\Exported\\{filename}", data, Encoding.UTF8);
-
-                        // Mark the invoice as sent
-                        await this.fortnox_repository.Action<InvoiceRoot>(nox_client, $"invoices/{root.document.id}/externalprint");
-
-                        // Log information
-                        this.logger.LogInformation($"Invoice, {filename} has been sent to {root.email}!");
+                        // Log the exception
+                        this.logger.LogError(ex, $"Invoice: {root.document.id}", null);
                     }
                 }
             }
@@ -560,6 +689,7 @@ namespace Annytab.Doxservr.Fortnox
             }
             catch(Exception ex)
             {
+                // Log the error
                 this.logger.LogError(ex, "UpdateCurrencyRates", null);
             }
             

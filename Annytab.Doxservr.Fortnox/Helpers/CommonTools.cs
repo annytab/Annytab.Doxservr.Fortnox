@@ -141,7 +141,7 @@ namespace Annytab.Doxservr.Fortnox
             if (country_code == "SK") { return true; }
             if (country_code == "FI") { return true; }
             if (country_code == "SE") { return true; }
-            if (country_code == "UK") { return true; }
+            //if (country_code == "UK") { return true; }
             else { return false; }
 
         } // End of the IsCountryCodeEU method

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net.Http;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
@@ -17,7 +16,7 @@ namespace Annytab.Doxservr.Fortnox
         #region Variables
 
         private readonly ILogger logger;
-        private readonly IFortnoxRepository fortnox_repository;
+        private readonly IFortnoxClient nox_client;
         private readonly DefaultValues default_values;
 
         #endregion
@@ -27,11 +26,11 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Create a new fortnox importer
         /// </summary>
-        public FortnoxImporter(ILogger<FortnoxImporter> logger, IFortnoxRepository fortnox_repository, IOptions<DefaultValues> default_values)
+        public FortnoxImporter(ILogger<IFortnoxImporter> logger, IFortnoxClient nox_client, IOptions<DefaultValues> default_values)
         {
             // Set values for instance variables
             this.logger = logger;
-            this.fortnox_repository = fortnox_repository;
+            this.nox_client = nox_client;
             this.default_values = default_values.Value;
 
         } // End of the constructor
@@ -43,16 +42,26 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Add a term of delivery if it does not exists
         /// </summary>
-        public async Task<TermsOfDeliveryRoot> AddTermsOfDelivery(HttpClient client, string term_of_delivery)
+        public async Task<TermsOfDeliveryRoot> AddTermsOfDelivery(string term_of_delivery)
         {
+            // Make sure that the input not is an empty string
+            if (term_of_delivery == "")
+                return null;
+
             // Get the root
-            TermsOfDeliveryRoot root = await this.fortnox_repository.Get<TermsOfDeliveryRoot>(client, $"termsofdeliveries/{term_of_delivery}");
+            FortnoxResponse<TermsOfDeliveryRoot> fr = await this.nox_client.Get<TermsOfDeliveryRoot>($"termsofdeliveries/{term_of_delivery}");
+
+            // Log errors
+            if(string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
 
             // Add the post if it does not exist
-            if (root == null)
+            if (fr.model == null)
             {
                 // Create a new post
-                root = new TermsOfDeliveryRoot
+                fr.model = new TermsOfDeliveryRoot
                 {
                     TermsOfDelivery = new TermsOfDelivery
                     {
@@ -62,27 +71,43 @@ namespace Annytab.Doxservr.Fortnox
                 };
                 
                 // Add the post
-                root = await this.fortnox_repository.Add<TermsOfDeliveryRoot>(client, root, $"termsofdeliveries");
+                fr = await this.nox_client.Add<TermsOfDeliveryRoot>(fr.model, $"termsofdeliveries");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
             }
 
             // Return the post
-            return root;
+            return fr.model;
 
         } // End of the AddTermsOfDelivery method
 
         /// <summary>
         /// Add a term of payment if it does not exists
         /// </summary>
-        public async Task<TermsOfPaymentRoot> AddTermsOfPayment(HttpClient client, string term_of_payment)
+        public async Task<TermsOfPaymentRoot> AddTermsOfPayment(string term_of_payment)
         {
+            // Make sure that the input not is an empty string
+            if (term_of_payment == "")
+                return null;
+
             // Get the root
-            TermsOfPaymentRoot root = await this.fortnox_repository.Get<TermsOfPaymentRoot>(client, $"termsofpayments/{term_of_payment}");
+            FortnoxResponse<TermsOfPaymentRoot> fr = await this.nox_client.Get<TermsOfPaymentRoot>($"termsofpayments/{term_of_payment}");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
 
             // Add the post if it does not exist
-            if (root == null)
+            if (fr.model == null)
             {
                 // Create a new post
-                root = new TermsOfPaymentRoot
+                fr.model = new TermsOfPaymentRoot
                 {
                     TermsOfPayment = new TermsOfPayment
                     {
@@ -92,27 +117,43 @@ namespace Annytab.Doxservr.Fortnox
                 };
 
                 // Add the post
-                root = await this.fortnox_repository.Add<TermsOfPaymentRoot>(client, root, $"termsofpayments");
+                fr = await this.nox_client.Add<TermsOfPaymentRoot>(fr.model, $"termsofpayments");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
             }
 
             // Return the post
-            return root;
+            return fr.model;
 
         } // End of the AddTermsOfPayment method
 
         /// <summary>
         /// Add a way of delivery if it does not exists
         /// </summary>
-        public async Task<WayOfDeliveryRoot> AddWayOfDelivery(HttpClient client, string way_of_delivery)
+        public async Task<WayOfDeliveryRoot> AddWayOfDelivery(string way_of_delivery)
         {
+            // Make sure that the input not is an empty string
+            if (way_of_delivery == "")
+                return null;
+
             // Get the root
-            WayOfDeliveryRoot root = await this.fortnox_repository.Get<WayOfDeliveryRoot>(client, $"wayofdeliveries/{way_of_delivery}");
+            FortnoxResponse<WayOfDeliveryRoot> fr = await this.nox_client.Get<WayOfDeliveryRoot>($"wayofdeliveries/{way_of_delivery}");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
 
             // Add the post if it does not exist
-            if (root == null)
+            if (fr.model == null)
             {
                 // Create a new post
-                root = new WayOfDeliveryRoot
+                fr.model = new WayOfDeliveryRoot
                 {
                     WayOfDelivery = new WayOfDelivery
                     {
@@ -122,27 +163,43 @@ namespace Annytab.Doxservr.Fortnox
                 };
 
                 // Add the post
-                root = await this.fortnox_repository.Add<WayOfDeliveryRoot>(client, root, $"wayofdeliveries");
+                fr = await this.nox_client.Add<WayOfDeliveryRoot>(fr.model, $"wayofdeliveries");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
             }
 
             // Return the post
-            return root;
+            return fr.model;
 
         } // End of the AddWayOfDelivery method
 
         /// <summary>
         /// Add a currency if it does not exists
         /// </summary>
-        public async Task<CurrencyRoot> AddCurrency(HttpClient client, string currency_code)
+        public async Task<CurrencyRoot> AddCurrency(string currency_code)
         {
+            // Make sure that the input not is an empty string
+            if (currency_code == "")
+                return null;
+
             // Get the root
-            CurrencyRoot root = await this.fortnox_repository.Get<CurrencyRoot>(client, $"currencies/{currency_code}");
+            FortnoxResponse<CurrencyRoot> fr = await this.nox_client.Get<CurrencyRoot>($"currencies/{currency_code}");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
 
             // Add the currency if it does not exist
-            if (root == null)
+            if (fr.model == null)
             {
                 // Create a new post
-                root = new CurrencyRoot
+                fr.model = new CurrencyRoot
                 {
                     Currency = new Currency
                     {
@@ -152,27 +209,39 @@ namespace Annytab.Doxservr.Fortnox
                 };
 
                 // Add the post
-                root = await this.fortnox_repository.Add<CurrencyRoot>(client, root, $"currencies");
+                fr = await this.nox_client.Add<CurrencyRoot>(fr.model, $"currencies");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
             }
 
             // Return the post
-            return root;
+            return fr.model;
 
         } // End of the AddCurrency method
 
         /// <summary>
         /// Add a unit if it does not exists
         /// </summary>
-        public async Task<UnitRoot> AddUnit(HttpClient client, string unit_code)
+        public async Task<UnitRoot> AddUnit(string unit_code)
         {
             // Get the root
-            UnitRoot root = await this.fortnox_repository.Get<UnitRoot>(client, $"units/{unit_code}");
+            FortnoxResponse<UnitRoot> fr = await this.nox_client.Get<UnitRoot>($"units/{unit_code}");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
 
             // Add the unit if it does not exist
-            if (root == null)
+            if (fr.model == null)
             {
                 // Create a new post
-                root = new UnitRoot
+                fr.model = new UnitRoot
                 {
                     Unit = new Unit
                     {
@@ -182,27 +251,39 @@ namespace Annytab.Doxservr.Fortnox
                 };
 
                 // Add a unit
-                root = await this.fortnox_repository.Add<UnitRoot>(client, root, $"units");
+                fr = await this.nox_client.Add<UnitRoot>(fr.model, $"units");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
             }
 
             // Return the post
-            return root;
+            return fr.model;
 
         } // End of the AddUnit method
 
         /// <summary>
         /// Add a price list if it does not exists
         /// </summary>
-        public async Task<PriceListRoot> AddPriceList(HttpClient client, string code)
+        public async Task<PriceListRoot> AddPriceList(string code)
         {
             // Get the root
-            PriceListRoot root = await this.fortnox_repository.Get<PriceListRoot>(client, $"pricelists/{code}");
+            FortnoxResponse<PriceListRoot> fr = await this.nox_client.Get<PriceListRoot>($"pricelists/{code}");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
 
             // Add the price list if it does not exist
-            if (root == null)
+            if (fr.model == null)
             {
                 // Create a new post
-                root = new PriceListRoot
+                fr.model = new PriceListRoot
                 {
                     PriceList = new PriceList
                     {
@@ -212,27 +293,39 @@ namespace Annytab.Doxservr.Fortnox
                 };
 
                 // Add a price list
-                root = await this.fortnox_repository.Add<PriceListRoot>(client, root, $"pricelists");
+                fr = await this.nox_client.Add<PriceListRoot>(fr.model, $"pricelists");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
             }
 
             // Return the post
-            return root;
+            return fr.model;
 
         } // End of the AddPriceList method
 
         /// <summary>
         /// Add an account if it does not exist
         /// </summary>
-        public async Task<AccountRoot> AddAccount(HttpClient client, string account_number)
+        public async Task<AccountRoot> AddAccount(string account_number)
         {
             // Get the root
-            AccountRoot root = await this.fortnox_repository.Get<AccountRoot>(client, $"accounts/{account_number}");
+            FortnoxResponse<AccountRoot> fr = await this.nox_client.Get<AccountRoot>($"accounts/{account_number}");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
 
             // Add the account if it does not exist
-            if (root == null)
+            if (fr.model == null)
             {
                 // Create a new post
-                root = new AccountRoot
+                fr.model = new AccountRoot
                 {
                     Account = new Account
                     {
@@ -242,21 +335,27 @@ namespace Annytab.Doxservr.Fortnox
                 };
 
                 // Add an account
-                root = await this.fortnox_repository.Add<AccountRoot>(client, root, $"accounts");
+                fr = await this.nox_client.Add<AccountRoot>(fr.model, $"accounts");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
             }
 
             // Return the post
-            return root;
+            return fr.model;
 
         } // End of the AddAccount method
 
         /// <summary>
         /// Add an article if it does not exist
         /// </summary>
-        public async Task<ArticleRoot> AddArticle(HttpClient client, ProductRow row)
+        public async Task<ArticleRoot> AddArticle(ProductRow row)
         {
             // Create a reference to an article root
-            ArticleRoot root = null;
+            FortnoxResponse<ArticleRoot> fr = new FortnoxResponse<ArticleRoot>();
 
             // Make sure that the product code only consists of alphanumeric characters
             row.product_code = string.IsNullOrEmpty(row.product_code) == false ? CommonTools.ConvertToAlphanumeric(row.product_code) : null;
@@ -264,35 +363,69 @@ namespace Annytab.Doxservr.Fortnox
             // Find the article
             if (string.IsNullOrEmpty(row.gtin) == false)
             {
-                // Try to get an article on EAN
-                ArticlesRoot articles_root = await this.fortnox_repository.Get<ArticlesRoot>(client, $"articles?ean={row.gtin}");
+                // Try to get articles on EAN
+                FortnoxResponse<ArticlesRoot> fr_page = await this.nox_client.Get<ArticlesRoot>($"articles?ean={row.gtin}");
 
-                if (articles_root != null && articles_root.Articles != null && articles_root.Articles.Count > 0)
+                // Log errors
+                if (string.IsNullOrEmpty(fr_page.error) == false)
                 {
-                    root = await this.fortnox_repository.Get<ArticleRoot>(client, $"articles/{articles_root.Articles[0].ArticleNumber}");
+                    this.logger.LogError(fr_page.error);
+                }
+
+                // Make sure that at least one article was found
+                if (fr_page.model != null && fr_page.model.Articles != null && fr_page.model.Articles.Count > 0)
+                {
+                    // Get an article
+                    fr = await this.nox_client.Get<ArticleRoot>($"articles/{fr_page.model.Articles[0].ArticleNumber}");
+
+                    // Log errors
+                    if (string.IsNullOrEmpty(fr.error) == false)
+                    {
+                        this.logger.LogError(fr.error);
+                    }
                 }
             }
-            if(root == null && string.IsNullOrEmpty(row.manufacturer_code) == false)
+            if(fr.model == null && string.IsNullOrEmpty(row.manufacturer_code) == false)
             {
-                // Try to get an article on manufacturer code
-                ArticlesRoot articles_root = await this.fortnox_repository.Get<ArticlesRoot>(client, $"articles?manufacturerarticlenumber={row.manufacturer_code}");
+                // Try to get articles on manufacturer code
+                FortnoxResponse<ArticlesRoot> fr_page = await this.nox_client.Get<ArticlesRoot>($"articles?manufacturerarticlenumber={row.manufacturer_code}");
 
-                if (articles_root != null && articles_root.Articles != null && articles_root.Articles.Count > 0)
+                // Log errors
+                if (string.IsNullOrEmpty(fr_page.error) == false)
                 {
-                    root = await this.fortnox_repository.Get<ArticleRoot>(client, $"articles/{articles_root.Articles[0].ArticleNumber}");
+                    this.logger.LogError(fr_page.error);
+                }
+
+                // Make sure that at least one article was found
+                if (fr_page.model != null && fr_page.model.Articles != null && fr_page.model.Articles.Count > 0)
+                {
+                    // Get an article
+                    fr = await this.nox_client.Get<ArticleRoot>($"articles/{fr_page.model.Articles[0].ArticleNumber}");
+
+                    // Log errors
+                    if (string.IsNullOrEmpty(fr.error) == false)
+                    {
+                        this.logger.LogError(fr.error);
+                    }
                 }
             }
-            if(root == null && string.IsNullOrEmpty(row.product_code) == false)
+            if(fr.model == null && string.IsNullOrEmpty(row.product_code) == false)
             {
-                // Try to get an article on article number
-                root = await this.fortnox_repository.Get<ArticleRoot>(client, $"articles/{row.product_code}");
+                // Get an article
+                fr = await this.nox_client.Get<ArticleRoot>($"articles/{row.product_code}");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
             }
 
             // Add the article if it does not exist
-            if (root == null)
+            if (fr.model == null)
             {
                 // Create a new article
-                root = new ArticleRoot
+                fr.model = new ArticleRoot
                 {
                     Article = new Article
                     {
@@ -310,164 +443,213 @@ namespace Annytab.Doxservr.Fortnox
                     }
                 };
 
-                // Add the post
-                root = await this.fortnox_repository.Add<ArticleRoot>(client, root, "articles");
+                // Add an article
+                fr = await this.nox_client.Add<ArticleRoot>(fr.model, "articles");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
 
                 // Add a default price
-                if(root != null)
+                if (fr.model != null)
                 {
                     PriceRoot price = new PriceRoot
                     {
                         Price = new Price
                         {
-                            ArticleNumber = root.Article.ArticleNumber,
+                            ArticleNumber = fr.model.Article.ArticleNumber,
                             PriceList = this.default_values.PriceList,
                             FromQuantity = 0,
                             Amount = row.unit_price
                         }
                     };
 
-                    price = await this.fortnox_repository.Add<PriceRoot>(client, price, "prices");
+                    // Add a price
+                    FortnoxResponse<PriceRoot> fr_price = await this.nox_client.Add<PriceRoot>(price, "prices");
+
+                    // Log errors
+                    if (string.IsNullOrEmpty(fr_price.error) == false)
+                    {
+                        this.logger.LogError(fr_price.error);
+                    }
                 }     
             }
 
             // Return the post
-            return root;
+            return fr.model;
 
         } // End of the AddArticle method
 
         /// <summary>
         /// Add or update a customer
         /// </summary>
-        public async Task<CustomerRoot> UpsertCustomer(HttpClient client, string dox_email, AnnytabDoxTrade doc)
+        public async Task<CustomerRoot> UpsertCustomer(string dox_email, AnnytabDoxTrade doc)
         {
             // Create variables
-            CustomerRoot root = null;
+            FortnoxResponse<CustomerRoot> fr = new FortnoxResponse<CustomerRoot>();
             bool customer_exists = false;
             string customer_email = doc.buyer_information != null && string.IsNullOrEmpty(doc.buyer_information.email) == false ? doc.buyer_information.email : dox_email;
 
-            // Find the customer on email
-            CustomersRoot customers_root = await this.fortnox_repository.Get<CustomersRoot>(client, $"customers?email={customer_email}");
-            if (customers_root != null && customers_root.Customers != null && customers_root.Customers.Count > 0)
+            // Find customers on email
+            FortnoxResponse<CustomersRoot> fr_page = await this.nox_client.Get<CustomersRoot>($"customers?email={customer_email}");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr_page.error) == false)
             {
-                root = await this.fortnox_repository.Get<CustomerRoot>(client, $"customers/{customers_root.Customers[0].CustomerNumber}");
+                this.logger.LogError(fr_page.error);
+            }
+
+            // Make sure that at least one customer was found
+            if (fr_page.model != null && fr_page.model.Customers != null && fr_page.model.Customers.Count > 0)
+            {
+                // Get a customer
+                fr = await this.nox_client.Get<CustomerRoot>($"customers/{fr_page.model.Customers[0].CustomerNumber}");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
             }
 
             // Check if the customer exists
-            if (root != null)
+            if (fr.model != null)
             {
                 customer_exists = true;
             }
             else
             {
-                root = new CustomerRoot { Customer = new Customer() };
+                fr.model = new CustomerRoot { Customer = new Customer() };
             }
 
             // Update the customer: ONLY SET VAT TYPE, ACCOUNT IS SET IN ARTICLE
-            root.Customer.Email = customer_email;
+            fr.model.Customer.Email = customer_email;
             if (doc.seller_information != null)
             {
-                root.Customer.OurReference = string.IsNullOrEmpty(root.Customer.OurReference) == true ? doc.seller_information.contact_name : root.Customer.OurReference;
+                fr.model.Customer.OurReference = string.IsNullOrEmpty(fr.model.Customer.OurReference) == true ? doc.seller_information.contact_name : fr.model.Customer.OurReference;
             }
             if(doc.buyer_information != null)
             {
-                root.Customer.Name = string.IsNullOrEmpty(doc.buyer_information.person_name) == false ? doc.buyer_information.person_name : root.Customer.Name;
-                root.Customer.OrganisationNumber = string.IsNullOrEmpty(doc.buyer_information.person_id) == false ? doc.buyer_information.person_id : root.Customer.OrganisationNumber;
-                root.Customer.VATNumber = string.IsNullOrEmpty(doc.buyer_information.vat_number) == false ? doc.buyer_information.vat_number : root.Customer.VATNumber;
-                root.Customer.YourReference = string.IsNullOrEmpty(doc.buyer_information.contact_name) == false ? doc.buyer_information.contact_name : root.Customer.YourReference;
-                root.Customer.Phone1 = string.IsNullOrEmpty(doc.buyer_information.phone_number) == false ? doc.buyer_information.phone_number : root.Customer.Phone1;
-                root.Customer.Address1 = string.IsNullOrEmpty(doc.buyer_information.address_line_1) == false ? doc.buyer_information.address_line_1 : root.Customer.Address1;
-                root.Customer.Address2 = string.IsNullOrEmpty(doc.buyer_information.address_line_2) == false ? doc.buyer_information.address_line_2 : root.Customer.Address2;
-                root.Customer.ZipCode = string.IsNullOrEmpty(doc.buyer_information.postcode) == false ? doc.buyer_information.postcode : root.Customer.ZipCode;
-                root.Customer.City = string.IsNullOrEmpty(doc.buyer_information.city_name) == false ? doc.buyer_information.city_name : root.Customer.City;
-                root.Customer.CountryCode = string.IsNullOrEmpty(doc.buyer_information.country_code) == false ? doc.buyer_information.country_code : root.Customer.CountryCode;
-                root.Customer.EmailOffer = string.IsNullOrEmpty(root.Customer.EmailOffer) == true ? customer_email : root.Customer.EmailOffer;
-                root.Customer.EmailOrder = string.IsNullOrEmpty(root.Customer.EmailOrder) == true ? customer_email : root.Customer.EmailOrder;
-                root.Customer.EmailInvoice = string.IsNullOrEmpty(root.Customer.EmailInvoice) == true ? customer_email : root.Customer.EmailInvoice;
+                fr.model.Customer.Name = string.IsNullOrEmpty(doc.buyer_information.person_name) == false ? doc.buyer_information.person_name : fr.model.Customer.Name;
+                fr.model.Customer.OrganisationNumber = string.IsNullOrEmpty(doc.buyer_information.person_id) == false ? doc.buyer_information.person_id : fr.model.Customer.OrganisationNumber;
+                fr.model.Customer.VATNumber = string.IsNullOrEmpty(doc.buyer_information.vat_number) == false ? doc.buyer_information.vat_number : fr.model.Customer.VATNumber;
+                fr.model.Customer.YourReference = string.IsNullOrEmpty(doc.buyer_information.contact_name) == false ? doc.buyer_information.contact_name : fr.model.Customer.YourReference;
+                fr.model.Customer.Phone1 = string.IsNullOrEmpty(doc.buyer_information.phone_number) == false ? doc.buyer_information.phone_number : fr.model.Customer.Phone1;
+                fr.model.Customer.Address1 = string.IsNullOrEmpty(doc.buyer_information.address_line_1) == false ? doc.buyer_information.address_line_1 : fr.model.Customer.Address1;
+                fr.model.Customer.Address2 = string.IsNullOrEmpty(doc.buyer_information.address_line_2) == false ? doc.buyer_information.address_line_2 : fr.model.Customer.Address2;
+                fr.model.Customer.ZipCode = string.IsNullOrEmpty(doc.buyer_information.postcode) == false ? doc.buyer_information.postcode : fr.model.Customer.ZipCode;
+                fr.model.Customer.City = string.IsNullOrEmpty(doc.buyer_information.city_name) == false ? doc.buyer_information.city_name : fr.model.Customer.City;
+                fr.model.Customer.CountryCode = string.IsNullOrEmpty(doc.buyer_information.country_code) == false ? doc.buyer_information.country_code : fr.model.Customer.CountryCode;
+                fr.model.Customer.EmailOffer = string.IsNullOrEmpty(fr.model.Customer.EmailOffer) == true ? customer_email : fr.model.Customer.EmailOffer;
+                fr.model.Customer.EmailOrder = string.IsNullOrEmpty(fr.model.Customer.EmailOrder) == true ? customer_email : fr.model.Customer.EmailOrder;
+                fr.model.Customer.EmailInvoice = string.IsNullOrEmpty(fr.model.Customer.EmailInvoice) == true ? customer_email : fr.model.Customer.EmailInvoice;
             }
             if(doc.delivery_information != null)
             {
-                root.Customer.DeliveryName = string.IsNullOrEmpty(doc.delivery_information.person_name) == false ? doc.delivery_information.person_name : root.Customer.DeliveryName;
-                root.Customer.DeliveryPhone1 = string.IsNullOrEmpty(doc.delivery_information.phone_number) == false ? doc.delivery_information.phone_number : root.Customer.DeliveryPhone1;
-                root.Customer.DeliveryAddress1 = string.IsNullOrEmpty(doc.delivery_information.address_line_1) == false ? doc.delivery_information.address_line_1 : root.Customer.DeliveryAddress1;
-                root.Customer.DeliveryAddress2 = string.IsNullOrEmpty(doc.delivery_information.address_line_2) == false ? doc.delivery_information.address_line_2 : root.Customer.DeliveryAddress2;
-                root.Customer.DeliveryCity = string.IsNullOrEmpty(doc.delivery_information.city_name) == false ? doc.delivery_information.city_name : root.Customer.DeliveryCity;
-                root.Customer.DeliveryCountryCode = string.IsNullOrEmpty(doc.delivery_information.country_code) == false ? doc.delivery_information.country_code : root.Customer.DeliveryCountryCode;
-                root.Customer.DeliveryZipCode = string.IsNullOrEmpty(doc.delivery_information.postcode) == false ? doc.delivery_information.postcode : root.Customer.DeliveryZipCode;
+                fr.model.Customer.DeliveryName = string.IsNullOrEmpty(doc.delivery_information.person_name) == false ? doc.delivery_information.person_name : fr.model.Customer.DeliveryName;
+                fr.model.Customer.DeliveryPhone1 = string.IsNullOrEmpty(doc.delivery_information.phone_number) == false ? doc.delivery_information.phone_number : fr.model.Customer.DeliveryPhone1;
+                fr.model.Customer.DeliveryAddress1 = string.IsNullOrEmpty(doc.delivery_information.address_line_1) == false ? doc.delivery_information.address_line_1 : fr.model.Customer.DeliveryAddress1;
+                fr.model.Customer.DeliveryAddress2 = string.IsNullOrEmpty(doc.delivery_information.address_line_2) == false ? doc.delivery_information.address_line_2 : fr.model.Customer.DeliveryAddress2;
+                fr.model.Customer.DeliveryCity = string.IsNullOrEmpty(doc.delivery_information.city_name) == false ? doc.delivery_information.city_name : fr.model.Customer.DeliveryCity;
+                fr.model.Customer.DeliveryCountryCode = string.IsNullOrEmpty(doc.delivery_information.country_code) == false ? doc.delivery_information.country_code : fr.model.Customer.DeliveryCountryCode;
+                fr.model.Customer.DeliveryZipCode = string.IsNullOrEmpty(doc.delivery_information.postcode) == false ? doc.delivery_information.postcode : fr.model.Customer.DeliveryZipCode;
             }
-            root.Customer.Currency = string.IsNullOrEmpty(doc.currency_code) == false ? doc.currency_code : root.Customer.Currency;
-            root.Customer.TermsOfDelivery = string.IsNullOrEmpty(doc.terms_of_delivery) == false ? doc.terms_of_delivery : root.Customer.TermsOfDelivery;
-            root.Customer.TermsOfPayment = string.IsNullOrEmpty(doc.terms_of_payment) == false ? doc.terms_of_payment : root.Customer.TermsOfPayment;
-            root.Customer.VATType = CommonTools.GetCustomerVatType(root.Customer, this.default_values);
-            root.Customer.WayOfDelivery = string.IsNullOrEmpty(doc.mode_of_delivery) == false ? doc.mode_of_delivery : root.Customer.WayOfDelivery;
-            root.Customer.Type = string.IsNullOrEmpty(root.Customer.Type) == true && string.IsNullOrEmpty(root.Customer.VATNumber) == false ? "COMPANY" : root.Customer.Type;
-            root.Customer.PriceList = string.IsNullOrEmpty(root.Customer.PriceList) == true ? this.default_values.PriceList : root.Customer.PriceList;
+            fr.model.Customer.Currency = string.IsNullOrEmpty(doc.currency_code) == false ? doc.currency_code : fr.model.Customer.Currency;
+            fr.model.Customer.TermsOfDelivery = string.IsNullOrEmpty(doc.terms_of_delivery) == false ? doc.terms_of_delivery : fr.model.Customer.TermsOfDelivery;
+            fr.model.Customer.TermsOfPayment = string.IsNullOrEmpty(doc.terms_of_payment) == false ? doc.terms_of_payment : fr.model.Customer.TermsOfPayment;
+            fr.model.Customer.VATType = CommonTools.GetCustomerVatType(fr.model.Customer, this.default_values);
+            fr.model.Customer.WayOfDelivery = string.IsNullOrEmpty(doc.mode_of_delivery) == false ? doc.mode_of_delivery : fr.model.Customer.WayOfDelivery;
+            fr.model.Customer.Type = string.IsNullOrEmpty(fr.model.Customer.Type) == true && string.IsNullOrEmpty(fr.model.Customer.VATNumber) == false ? "COMPANY" : fr.model.Customer.Type;
+            fr.model.Customer.PriceList = string.IsNullOrEmpty(fr.model.Customer.PriceList) == true ? this.default_values.PriceList : fr.model.Customer.PriceList;
 
             // Add or update the customer
             if (customer_exists == true)
             {
-                root = await this.fortnox_repository.Update<CustomerRoot>(client, root, $"customers/{root.Customer.CustomerNumber}");
+                fr = await this.nox_client.Update<CustomerRoot>(fr.model, $"customers/{fr.model.Customer.CustomerNumber}");
             }
             else
             {
-                root = await this.fortnox_repository.Add<CustomerRoot>(client, root, "customers");
+                fr = await this.nox_client.Add<CustomerRoot>(fr.model, "customers");
+            }
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
             }
 
             // Return the post
-            return root;
+            return fr.model;
 
         } // End of the UpsertCustomer method
 
         /// <summary>
         /// Add or update a supplier
         /// </summary>
-        public async Task<SupplierRoot> UpsertSupplier(HttpClient client, string dox_email, AnnytabDoxTrade doc)
+        public async Task<SupplierRoot> UpsertSupplier(string dox_email, AnnytabDoxTrade doc)
         {
             // Create variables
-            SupplierRoot root = null;
+            FortnoxResponse<SupplierRoot> fr = new FortnoxResponse<SupplierRoot>();
             bool supplier_exists = false;
             string supplier_email = doc.seller_information != null && string.IsNullOrEmpty(doc.seller_information.email) == false ? doc.seller_information.email : dox_email;
 
-            // Find the supplier on email
-            SuppliersRoot suppliers_root = await this.fortnox_repository.Get<SuppliersRoot>(client, $"suppliers?email={supplier_email}");
-            if (suppliers_root != null && suppliers_root.Suppliers != null && suppliers_root.Suppliers.Count > 0)
+            // Find suppliers on email
+            FortnoxResponse<SuppliersRoot> fr_page = await this.nox_client.Get<SuppliersRoot>($"suppliers?email={supplier_email}");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr_page.error) == false)
             {
-                root = await this.fortnox_repository.Get<SupplierRoot>(client, $"suppliers/{suppliers_root.Suppliers[0].SupplierNumber}");
+                this.logger.LogError(fr_page.error);
+            }
+
+            // Make sure that at least one supplier was found
+            if (fr_page.model != null && fr_page.model.Suppliers != null && fr_page.model.Suppliers.Count > 0)
+            {
+                // Get a supplier
+                fr = await this.nox_client.Get<SupplierRoot>($"suppliers/{fr_page.model.Suppliers[0].SupplierNumber}");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
             }
 
             // Check if the supplier exists
-            if (root != null)
+            if (fr.model != null)
             {
                 supplier_exists = true;
             }
             else
             {
-                root = new SupplierRoot { Supplier = new Supplier() };
+                fr.model = new SupplierRoot { Supplier = new Supplier() };
             }
 
             // Update the supplier
-            root.Supplier.Email = supplier_email;
+            fr.model.Supplier.Email = supplier_email;
             if (doc.buyer_information != null)
             {
-                root.Supplier.OurReference = string.IsNullOrEmpty(root.Supplier.OurReference) == true ? doc.buyer_information.contact_name : root.Supplier.OurReference;
+                fr.model.Supplier.OurReference = string.IsNullOrEmpty(fr.model.Supplier.OurReference) == true ? doc.buyer_information.contact_name : fr.model.Supplier.OurReference;
             }
             if(doc.seller_information != null)
             {
-                root.Supplier.Name = string.IsNullOrEmpty(doc.seller_information.person_name) == false ? doc.seller_information.person_name : root.Supplier.Name;
-                root.Supplier.OrganisationNumber = string.IsNullOrEmpty(doc.seller_information.person_id) == false ? doc.seller_information.person_id : root.Supplier.OrganisationNumber;
-                root.Supplier.VATNumber = string.IsNullOrEmpty(doc.seller_information.vat_number) == false ? doc.seller_information.vat_number : root.Supplier.VATNumber;
-                root.Supplier.YourReference = string.IsNullOrEmpty(doc.seller_information.contact_name) == false ? doc.seller_information.contact_name : root.Supplier.YourReference;
-                root.Supplier.Phone1 = string.IsNullOrEmpty(doc.seller_information.phone_number) == false ? doc.seller_information.phone_number : root.Supplier.Phone1;
-                root.Supplier.Address1 = string.IsNullOrEmpty(doc.seller_information.address_line_1) == false ? doc.seller_information.address_line_1 : root.Supplier.Address1;
-                root.Supplier.Address2 = string.IsNullOrEmpty(doc.seller_information.address_line_2) == false ? doc.seller_information.address_line_2 : root.Supplier.Address2;
-                root.Supplier.ZipCode = string.IsNullOrEmpty(doc.seller_information.postcode) == false ? doc.seller_information.postcode : root.Supplier.ZipCode;
-                root.Supplier.City = string.IsNullOrEmpty(doc.seller_information.city_name) == false ? doc.seller_information.city_name : root.Supplier.City;
-                root.Supplier.CountryCode = string.IsNullOrEmpty(doc.seller_information.country_code) == false ? doc.seller_information.country_code : root.Supplier.CountryCode;
+                fr.model.Supplier.Name = string.IsNullOrEmpty(doc.seller_information.person_name) == false ? doc.seller_information.person_name : fr.model.Supplier.Name;
+                fr.model.Supplier.OrganisationNumber = string.IsNullOrEmpty(doc.seller_information.person_id) == false ? doc.seller_information.person_id : fr.model.Supplier.OrganisationNumber;
+                fr.model.Supplier.VATNumber = string.IsNullOrEmpty(doc.seller_information.vat_number) == false ? doc.seller_information.vat_number : fr.model.Supplier.VATNumber;
+                fr.model.Supplier.YourReference = string.IsNullOrEmpty(doc.seller_information.contact_name) == false ? doc.seller_information.contact_name : fr.model.Supplier.YourReference;
+                fr.model.Supplier.Phone1 = string.IsNullOrEmpty(doc.seller_information.phone_number) == false ? doc.seller_information.phone_number : fr.model.Supplier.Phone1;
+                fr.model.Supplier.Address1 = string.IsNullOrEmpty(doc.seller_information.address_line_1) == false ? doc.seller_information.address_line_1 : fr.model.Supplier.Address1;
+                fr.model.Supplier.Address2 = string.IsNullOrEmpty(doc.seller_information.address_line_2) == false ? doc.seller_information.address_line_2 : fr.model.Supplier.Address2;
+                fr.model.Supplier.ZipCode = string.IsNullOrEmpty(doc.seller_information.postcode) == false ? doc.seller_information.postcode : fr.model.Supplier.ZipCode;
+                fr.model.Supplier.City = string.IsNullOrEmpty(doc.seller_information.city_name) == false ? doc.seller_information.city_name : fr.model.Supplier.City;
+                fr.model.Supplier.CountryCode = string.IsNullOrEmpty(doc.seller_information.country_code) == false ? doc.seller_information.country_code : fr.model.Supplier.CountryCode;
             }
-            root.Supplier.Currency = string.IsNullOrEmpty(doc.currency_code) == false ? doc.currency_code : root.Supplier.Currency;
-            root.Supplier.TermsOfPayment = string.IsNullOrEmpty(doc.terms_of_payment) == false ? doc.terms_of_payment : root.Supplier.TermsOfPayment;
-            root.Supplier.VATType = string.IsNullOrEmpty(root.Supplier.VATType) == true ? "NORMAL" : root.Supplier.VATType;
-            root.Supplier.OurCustomerNumber = doc.buyer_references != null && doc.buyer_references.ContainsKey("customer_id") ? doc.buyer_references["customer_id"] : null;
+            fr.model.Supplier.Currency = string.IsNullOrEmpty(doc.currency_code) == false ? doc.currency_code : fr.model.Supplier.Currency;
+            fr.model.Supplier.TermsOfPayment = string.IsNullOrEmpty(doc.terms_of_payment) == false ? doc.terms_of_payment : fr.model.Supplier.TermsOfPayment;
+            fr.model.Supplier.VATType = string.IsNullOrEmpty(fr.model.Supplier.VATType) == true ? "NORMAL" : fr.model.Supplier.VATType;
+            fr.model.Supplier.OurCustomerNumber = doc.buyer_references != null && doc.buyer_references.ContainsKey("customer_id") ? doc.buyer_references["customer_id"] : null;
             if(doc.payment_options != null)
             {
                 // Loop payment options
@@ -479,21 +661,21 @@ namespace Annytab.Doxservr.Fortnox
                     // Add information based on name
                     if (name == "IBAN")
                     {
-                        root.Supplier.BIC = string.IsNullOrEmpty(po.bank_identifier_code) == false ? po.bank_identifier_code : root.Supplier.BIC;
-                        root.Supplier.IBAN = string.IsNullOrEmpty(po.account_reference) == false ? po.account_reference : root.Supplier.IBAN;
+                        fr.model.Supplier.BIC = string.IsNullOrEmpty(po.bank_identifier_code) == false ? po.bank_identifier_code : fr.model.Supplier.BIC;
+                        fr.model.Supplier.IBAN = string.IsNullOrEmpty(po.account_reference) == false ? po.account_reference : fr.model.Supplier.IBAN;
                     }
                     else if (name == "BG")
                     {
-                        root.Supplier.BG = string.IsNullOrEmpty(po.account_reference) == false ? po.account_reference : root.Supplier.BG;
+                        fr.model.Supplier.BG = string.IsNullOrEmpty(po.account_reference) == false ? po.account_reference : fr.model.Supplier.BG;
                     }
                     else if (name == "PG")
                     {
-                        root.Supplier.PG = string.IsNullOrEmpty(po.account_reference) == false ? po.account_reference : root.Supplier.PG;
+                        fr.model.Supplier.PG = string.IsNullOrEmpty(po.account_reference) == false ? po.account_reference : fr.model.Supplier.PG;
                     }
                     else if (name == "BANK")
                     {
-                        root.Supplier.BankAccountNumber = string.IsNullOrEmpty(po.account_reference) == false ? po.account_reference.Replace(" ", "").Replace("-", "") : root.Supplier.BankAccountNumber;
-                        root.Supplier.Bank = string.IsNullOrEmpty(po.bank_name) == false ? po.bank_name : root.Supplier.Bank;
+                        fr.model.Supplier.BankAccountNumber = string.IsNullOrEmpty(po.account_reference) == false ? po.account_reference.Replace(" ", "").Replace("-", "") : fr.model.Supplier.BankAccountNumber;
+                        fr.model.Supplier.Bank = string.IsNullOrEmpty(po.bank_name) == false ? po.bank_name : fr.model.Supplier.Bank;
                     }
                 }
             }
@@ -501,22 +683,28 @@ namespace Annytab.Doxservr.Fortnox
             // Add or update the supplier
             if (supplier_exists == true)
             {
-                root = await this.fortnox_repository.Update<SupplierRoot>(client, root, $"suppliers/{root.Supplier.SupplierNumber}");
+                fr = await this.nox_client.Update<SupplierRoot>(fr.model, $"suppliers/{fr.model.Supplier.SupplierNumber}");
             }
             else
             {
-                root = await this.fortnox_repository.Add<SupplierRoot>(client, root, "suppliers");
+                fr = await this.nox_client.Add<SupplierRoot>(fr.model, "suppliers");
+            }
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
             }
 
             // Return the post
-            return root;
+            return fr.model;
 
         } // End of the UpsertSupplier method
 
         /// <summary>
         /// Upsert currencies
         /// </summary>
-        public async Task UpsertCurrencies(HttpClient client, FixerRates fixer_rates)
+        public async Task UpsertCurrencies(FixerRates fixer_rates)
         {
             // Loop currency rates
             foreach (KeyValuePair<string, decimal> entry in fixer_rates.rates)
@@ -525,16 +713,25 @@ namespace Annytab.Doxservr.Fortnox
                 bool currency_exists = false;
 
                 // Get the currency root
-                CurrencyRoot root = await this.fortnox_repository.Get<CurrencyRoot>(client, $"currencies/{entry.Key.ToUpper()}");
+                FortnoxResponse<CurrencyRoot> fr = await this.nox_client.Get<CurrencyRoot>($"currencies/{entry.Key.ToUpper()}");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
+                }
 
                 // Check if the currency exists
-                if (root != null) { currency_exists = true; }
+                if (fr.model != null)
+                {
+                    currency_exists = true;
+                }
 
                 // Calculate the currency rate
                 decimal currency_rate = Math.Round(1 / entry.Value, 6, MidpointRounding.AwayFromZero);
 
                 // Create a new currency
-                root = new CurrencyRoot
+                fr.model = new CurrencyRoot
                 {
                     Currency = new Currency
                     {
@@ -550,16 +747,41 @@ namespace Annytab.Doxservr.Fortnox
                 if (currency_exists == true)
                 {
                     // Update the post
-                    root = await this.fortnox_repository.Update<CurrencyRoot>(client, root, $"currencies/{entry.Key.ToUpper()}");
+                    fr = await this.nox_client.Update<CurrencyRoot>(fr.model, $"currencies/{entry.Key.ToUpper()}");
                 }
                 else
                 {
                     // Add the post
-                    root = await this.fortnox_repository.Add<CurrencyRoot>(client, root, $"currencies");
+                    fr = await this.nox_client.Add<CurrencyRoot>(fr.model, $"currencies");
+                }
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr.error) == false)
+                {
+                    this.logger.LogError(fr.error);
                 }
             }
 
         } // End of the UpsertCurrencies method
+
+        /// <summary>
+        /// Get trusted email senders
+        /// </summary>
+        public async Task<EmailSendersRoot> GetTrustedEmailSenders()
+        {
+            // Get a response
+            FortnoxResponse<EmailSendersRoot> fr = await this.nox_client.Get<EmailSendersRoot>("emailsenders");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
+
+            // Return the model
+            return fr.model;
+
+        } // End of the GetTrustedEmailSenders method
 
         #endregion
 
@@ -568,38 +790,38 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Add an offer
         /// </summary>
-        public async Task<OfferRoot> AddOffer(HttpClient client, string dox_email, AnnytabDoxTrade doc)
+        public async Task<OfferRoot> AddOffer(string dox_email, AnnytabDoxTrade doc)
         {
             // Terms of delivery
             if(string.IsNullOrEmpty(doc.terms_of_delivery) == false)
             {
                 doc.terms_of_delivery = CommonTools.ConvertToAlphanumeric(doc.terms_of_delivery).ToUpper();
-                await AddTermsOfDelivery(client, doc.terms_of_delivery);
+                await AddTermsOfDelivery(doc.terms_of_delivery);
             }
 
             // Terms of payment
             if(string.IsNullOrEmpty(doc.terms_of_payment) == false)
             {
-                doc.terms_of_payment = CommonTools.ConvertToAlphanumeric(doc.terms_of_payment).ToUpper();
-                await AddTermsOfPayment(client, doc.terms_of_payment);
+                doc.terms_of_payment = CommonTools.ConvertToAlphanumeric(doc.terms_of_payment).ToUpper().Replace("-", "");
+                await AddTermsOfPayment(doc.terms_of_payment);
             }
 
             // Way of delivery
             if(string.IsNullOrEmpty(doc.mode_of_delivery) == false)
             {
                 doc.mode_of_delivery = CommonTools.ConvertToAlphanumeric(doc.mode_of_delivery).ToUpper();
-                await AddWayOfDelivery(client, doc.mode_of_delivery);
+                await AddWayOfDelivery(doc.mode_of_delivery);
             }
 
             // Currency
             if(string.IsNullOrEmpty(doc.currency_code) == false)
             {
                 doc.currency_code = doc.currency_code.ToUpper();
-                await AddCurrency(client, doc.currency_code);
+                await AddCurrency(doc.currency_code);
             }
 
             // Upsert the customer
-            CustomerRoot customer_root = await UpsertCustomer(client, dox_email, doc);
+            CustomerRoot customer_root = await UpsertCustomer(dox_email, doc);
 
             // Return if the customer is null
             if (customer_root == null || customer_root.Customer == null)
@@ -613,7 +835,7 @@ namespace Annytab.Doxservr.Fortnox
             // Add offer rows
             if(doc.product_rows != null)
             {
-                await AddOfferRows(client, doc.product_rows, rows);
+                await AddOfferRows(doc.product_rows, rows);
             }
 
             // Create an offer
@@ -634,45 +856,54 @@ namespace Annytab.Doxservr.Fortnox
             };
 
             // Add the offer
-            return await this.fortnox_repository.Add<OfferRoot>(client, root, "offers");
+            FortnoxResponse<OfferRoot> fr = await this.nox_client.Add<OfferRoot>(root, "offers");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
+
+            // Return the offer
+            return fr.model;
 
         } // End of the AddOffer method
 
         /// <summary>
         /// Add an order
         /// </summary>
-        public async Task<OrderRoot> AddOrder(HttpClient client, string dox_email, AnnytabDoxTrade doc)
+        public async Task<OrderRoot> AddOrder(string dox_email, AnnytabDoxTrade doc)
         {
             // Terms of delivery
             if (string.IsNullOrEmpty(doc.terms_of_delivery) == false)
             {
                 doc.terms_of_delivery = CommonTools.ConvertToAlphanumeric(doc.terms_of_delivery).ToUpper();
-                await AddTermsOfDelivery(client, doc.terms_of_delivery);
+                await AddTermsOfDelivery(doc.terms_of_delivery);
             }
 
             // Terms of payment
             if (string.IsNullOrEmpty(doc.terms_of_payment) == false)
             {
-                doc.terms_of_payment = CommonTools.ConvertToAlphanumeric(doc.terms_of_payment).ToUpper();
-                await AddTermsOfPayment(client, doc.terms_of_payment);
+                doc.terms_of_payment = CommonTools.ConvertToAlphanumeric(doc.terms_of_payment).ToUpper().Replace("-", "");
+                await AddTermsOfPayment(doc.terms_of_payment);
             }
 
             // Way of delivery
             if (string.IsNullOrEmpty(doc.mode_of_delivery) == false)
             {
                 doc.mode_of_delivery = CommonTools.ConvertToAlphanumeric(doc.mode_of_delivery).ToUpper();
-                await AddWayOfDelivery(client, doc.mode_of_delivery);
+                await AddWayOfDelivery(doc.mode_of_delivery);
             }
 
             // Currency
             if (string.IsNullOrEmpty(doc.currency_code) == false)
             {
                 doc.currency_code = doc.currency_code.ToUpper();
-                await AddCurrency(client, doc.currency_code);
+                await AddCurrency(doc.currency_code);
             }
 
             // Upsert the customer
-            CustomerRoot customer_root = await UpsertCustomer(client, dox_email, doc);
+            CustomerRoot customer_root = await UpsertCustomer(dox_email, doc);
 
             // Return if the customer is null
             if (customer_root == null || customer_root.Customer == null)
@@ -686,7 +917,7 @@ namespace Annytab.Doxservr.Fortnox
             // Add order rows
             if (doc.product_rows != null)
             {
-                await AddOrderRows(client, doc.product_rows, rows);
+                await AddOrderRows(doc.product_rows, rows);
             }
 
             // Create an order
@@ -708,31 +939,40 @@ namespace Annytab.Doxservr.Fortnox
             };
 
             // Add the order
-            return await this.fortnox_repository.Add<OrderRoot>(client, root, "orders");
+            FortnoxResponse<OrderRoot> fr = await this.nox_client.Add<OrderRoot>(root, "orders");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
+
+            // Return the order
+            return fr.model;
 
         } // End of the AddOrder method
 
         /// <summary>
         /// Add an supplier invoice
         /// </summary>
-        public async Task<SupplierInvoiceRoot> AddSupplierInvoice(HttpClient client, string dox_email, AnnytabDoxTrade doc)
+        public async Task<SupplierInvoiceRoot> AddSupplierInvoice(string dox_email, AnnytabDoxTrade doc)
         {
             // Terms of payment
             if (string.IsNullOrEmpty(doc.terms_of_payment) == false)
             {
-                doc.terms_of_payment = CommonTools.ConvertToAlphanumeric(doc.terms_of_payment).ToUpper();
-                await AddTermsOfPayment(client, doc.terms_of_payment);
+                doc.terms_of_payment = CommonTools.ConvertToAlphanumeric(doc.terms_of_payment).ToUpper().Replace("-", "");
+                await AddTermsOfPayment(doc.terms_of_payment);
             }
 
             // Currency
             if (string.IsNullOrEmpty(doc.currency_code) == false)
             {
                 doc.currency_code = doc.currency_code.ToUpper();
-                await AddCurrency(client, doc.currency_code);
+                await AddCurrency(doc.currency_code);
             }
 
             // Upsert the supplier
-            SupplierRoot supplier_root = await UpsertSupplier(client, dox_email, doc);
+            SupplierRoot supplier_root = await UpsertSupplier(dox_email, doc);
 
             // Return if the supplier_root is null
             if(supplier_root == null || supplier_root.Supplier == null)
@@ -776,7 +1016,7 @@ namespace Annytab.Doxservr.Fortnox
             // Add supplier invoice rows
             if (doc.product_rows != null)
             {
-                await AddSupplierInvoiceRows(client, doc.product_rows, rows);
+                await AddSupplierInvoiceRows(doc.product_rows, rows);
             }
 
             // Create a supplier invoice
@@ -795,7 +1035,16 @@ namespace Annytab.Doxservr.Fortnox
             };
 
             // Add a supplier invoice
-            return await this.fortnox_repository.Add<SupplierInvoiceRoot>(client, root, "supplierinvoices");
+            FortnoxResponse<SupplierInvoiceRoot> fr = await this.nox_client.Add<SupplierInvoiceRoot>(root, "supplierinvoices");
+            
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
+
+            // Return the supplier invoice
+            return fr.model;
 
         } // End of the AddSupplierInvoice method
 
@@ -806,7 +1055,7 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Add offer rows recursively
         /// </summary>
-        private async Task AddOfferRows(HttpClient client, IList<ProductRow> product_rows, IList<OfferRow> offer_rows)
+        private async Task AddOfferRows(IList<ProductRow> product_rows, IList<OfferRow> offer_rows)
         {
             // Loop product rows
             foreach (ProductRow row in product_rows)
@@ -815,14 +1064,14 @@ namespace Annytab.Doxservr.Fortnox
                 if(string.IsNullOrEmpty(row.unit_code) == false)
                 {
                     row.unit_code = CommonTools.ConvertToAlphanumeric(row.unit_code).ToLower();
-                    await AddUnit(client, row.unit_code);
+                    await AddUnit(row.unit_code);
                 }
 
                 // Article, add if there is an identifier
                 ArticleRoot article_root = null;
                 if (string.IsNullOrEmpty(row.product_code) == false || string.IsNullOrEmpty(row.manufacturer_code) == false || string.IsNullOrEmpty(row.gtin) == false)
                 {
-                    article_root = await AddArticle(client, row);
+                    article_root = await AddArticle(row);
                 }
                 
                 // Add a offer row
@@ -838,7 +1087,7 @@ namespace Annytab.Doxservr.Fortnox
                 // Check if there is sub rows
                 if (row.subrows != null && row.subrows.Count > 0)
                 {
-                    await AddOfferRows(client, row.subrows, offer_rows);
+                    await AddOfferRows(row.subrows, offer_rows);
                 }
             }
 
@@ -847,7 +1096,7 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Add order rows recursively
         /// </summary>
-        private async Task AddOrderRows(HttpClient client, IList<ProductRow> product_rows, IList<OrderRow> order_rows)
+        private async Task AddOrderRows(IList<ProductRow> product_rows, IList<OrderRow> order_rows)
         {
             // Loop product rows
             foreach (ProductRow row in product_rows)
@@ -856,14 +1105,14 @@ namespace Annytab.Doxservr.Fortnox
                 if (string.IsNullOrEmpty(row.unit_code) == false)
                 {
                     row.unit_code = CommonTools.ConvertToAlphanumeric(row.unit_code).ToLower();
-                    await AddUnit(client, row.unit_code);
+                    await AddUnit(row.unit_code);
                 }
 
                 // Article, add if there is an identifier
                 ArticleRoot article_root = null;
                 if (string.IsNullOrEmpty(row.product_code) == false || string.IsNullOrEmpty(row.manufacturer_code) == false || string.IsNullOrEmpty(row.gtin) == false)
                 {
-                    article_root = await AddArticle(client, row);
+                    article_root = await AddArticle(row);
                 }
 
                 // Add a order row
@@ -880,7 +1129,7 @@ namespace Annytab.Doxservr.Fortnox
                 // Check if there is sub rows
                 if (row.subrows != null && row.subrows.Count > 0)
                 {
-                    await AddOrderRows(client, row.subrows, order_rows);
+                    await AddOrderRows(row.subrows, order_rows);
                 }
             }
 
@@ -889,7 +1138,7 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Add supplier invoice rows recursively
         /// </summary>
-        private async Task AddSupplierInvoiceRows(HttpClient client, IList<ProductRow> product_rows, IList<SupplierInvoiceRow> supplier_invoice_rows)
+        private async Task AddSupplierInvoiceRows(IList<ProductRow> product_rows, IList<SupplierInvoiceRow> supplier_invoice_rows)
         {
             // Loop product rows
             foreach (ProductRow row in product_rows)
@@ -898,14 +1147,14 @@ namespace Annytab.Doxservr.Fortnox
                 if (string.IsNullOrEmpty(row.unit_code) == false)
                 {
                     row.unit_code = CommonTools.ConvertToAlphanumeric(row.unit_code).ToLower();
-                    await AddUnit(client, row.unit_code);
+                    await AddUnit(row.unit_code);
                 }
 
                 // Article, add if there is an identifier
                 ArticleRoot article_root = null;
                 if (string.IsNullOrEmpty(row.product_code) == false || string.IsNullOrEmpty(row.manufacturer_code) == false || string.IsNullOrEmpty(row.gtin) == false)
                 {
-                    article_root = await AddArticle(client, row);
+                    article_root = await AddArticle(row);
                 }
 
                 // Add a supplier invoice row
@@ -922,7 +1171,7 @@ namespace Annytab.Doxservr.Fortnox
                 // Check if there is sub rows
                 if (row.subrows != null && row.subrows.Count > 0)
                 {
-                    await AddSupplierInvoiceRows(client, row.subrows, supplier_invoice_rows);
+                    await AddSupplierInvoiceRows(row.subrows, supplier_invoice_rows);
                 }
             }
 

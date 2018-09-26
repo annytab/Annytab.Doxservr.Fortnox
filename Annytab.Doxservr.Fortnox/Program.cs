@@ -1,11 +1,10 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Annytab.Doxservr.Client.V1;
 using Annytab.Fortnox.Client.V3;
+using Annytab.Doxservr.Client.V1;
 
 namespace Annytab.Doxservr.Fortnox
 {
@@ -57,12 +56,15 @@ namespace Annytab.Doxservr.Fortnox
             services.Configure<FortnoxOptions>(configuration.GetSection("FortnoxOptions"));
             services.Configure<DefaultValues>(configuration.GetSection("DefaultValues"));
 
+            // Add clients
+            services.AddHttpClient<IFortnoxClient, FortnoxClient>();
+            services.AddHttpClient<IDoxservrFilesClient, DoxservrFilesClient>();
+            services.AddHttpClient<IFixerClient, FixerClient>();
+
             // Add repositories
-            services.AddScoped<IFilesRepository, FilesRepository>();
-            services.AddScoped<IFortnoxRepository, FortnoxRepository>();
             services.AddScoped<IFortnoxImporter, FortnoxImporter>();
             services.AddScoped<IFortnoxExporter, FortnoxExporter>();
-            services.AddTransient<IWorkerRepository, WorkerRepository>();
+            services.AddScoped<IWorkerRepository, WorkerRepository>();
             
             // Build a service provider
             IServiceProvider serviceProvider = services.BuildServiceProvider();

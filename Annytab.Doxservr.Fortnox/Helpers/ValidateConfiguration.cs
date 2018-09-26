@@ -3,6 +3,8 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Net.Http;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Annytab.Fortnox.Client.V3;
 
@@ -85,23 +87,37 @@ namespace Annytab.Doxservr.Fortnox
                 }
                 else if (string.IsNullOrEmpty(app_settings.FortnoxOptions.AccessToken) == true)
                 {
-                    // Get an access token from fortnox
-                    AuthorizationResponse response = await FortnoxRepository.GetAccessToken(app_settings.FortnoxOptions.AuthorizationCode, app_settings.FortnoxOptions.ClientSecret);
-
-                    // Check if the request was a success or not
-                    if(response.success == true)
+                    // Use a http client
+                    using (HttpClient http_client = new HttpClient())
                     {
-                        // Set the access token in app settings
-                        app_settings.FortnoxOptions.AccessToken = response.message;
+                        // Create options
+                        IOptions<FortnoxOptions> options = Options.Create<FortnoxOptions>(new FortnoxOptions
+                        {
+                            ClientSecret = app_settings.FortnoxOptions.ClientSecret,
+                            AuthorizationCode = app_settings.FortnoxOptions.AuthorizationCode
+                        });
 
-                        // Write updated application settings to the file
-                        System.IO.File.WriteAllText(path, JsonConvert.SerializeObject(app_settings, Formatting.Indented));
-                    }
-                    else
-                    {
-                        // Log the error
-                        LogError(response.message);
-                    }             
+                        // Create a fortnox authorization client
+                        FortnoxAuthorizationClient client = new FortnoxAuthorizationClient(http_client, options);
+
+                        // Get an access token from fortnox
+                        AuthorizationResponse response = await client.GetAccessToken();
+
+                        // Check if the request was a success or not
+                        if (response.success == true)
+                        {
+                            // Set the access token in app settings
+                            app_settings.FortnoxOptions.AccessToken = response.message;
+
+                            // Write updated application settings to the file
+                            System.IO.File.WriteAllText(path, JsonConvert.SerializeObject(app_settings, Formatting.Indented));
+                        }
+                        else
+                        {
+                            // Log the error
+                            LogError(response.message);
+                        }
+                    }          
                 }
             }
             catch(Exception ex)

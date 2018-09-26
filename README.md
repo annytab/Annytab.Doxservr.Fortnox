@@ -46,8 +46,6 @@ AuthorizationCode (API-kod).
 - **SalesAccountEXPORT:** Account for sales to customers outside of EU, no value added tax. Must exist and be active in Fortnox, is added to new articles.
 - **PurchaseAccount:** Account for purchases (expenses). Must exist and be active in Fortnox, is added to new articles.
 - **OnlyAllowTrustedSenders:** Set this value to true if you only want to allow documents from trusted senders to be imported to Fortnox. You can add email addresses to a list of trusted email addresses in Fortnox (Inställningar/Arkivplats).
-- **DoxservrGibPerInvoice:** If you want to refill your doxservr account balance automatically, enter the number of gibibytes that you want to add with each invoice.
-- **DoxservrMinimumBytes:** If you want to refill your doxservr account balance automatically, enter the minimum number of bytes that you allow your account balance to have before refilling your account balance.
 
 ## Run the program
 The purpose of this program is that it should run on a schedule, triggered from a task scheduler program or from Azure. This program 

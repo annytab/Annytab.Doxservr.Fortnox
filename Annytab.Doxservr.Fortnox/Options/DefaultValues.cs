@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Annytab.Doxservr.Fortnox
+﻿namespace Annytab.Doxservr.Fortnox
 {
     /// <summary>
     /// This class represent default values
@@ -23,8 +21,6 @@ namespace Annytab.Doxservr.Fortnox
         public string SalesAccountEXPORT { get; set; }
         public string PurchaseAccount { get; set; }
         public bool OnlyAllowTrustedSenders { get; set; }
-        public Int64 DoxservrGibPerInvoice { get; set; }
-        public Int64? DoxservrMinimumBytes { get; set; }
 
         #endregion
 
@@ -50,8 +46,6 @@ namespace Annytab.Doxservr.Fortnox
             this.SalesAccountEXPORT = "";
             this.PurchaseAccount = "";
             this.OnlyAllowTrustedSenders = false;
-            this.DoxservrGibPerInvoice = 0;
-            this.DoxservrMinimumBytes = null;
 
         } // End of the constructor
 

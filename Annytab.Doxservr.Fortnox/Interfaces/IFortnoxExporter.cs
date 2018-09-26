@@ -1,5 +1,4 @@
-﻿using System.Net.Http;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Annytab.Fortnox.Client.V3;
 
@@ -10,12 +9,14 @@ namespace Annytab.Doxservr.Fortnox
     /// </summary>
     public interface IFortnoxExporter
     {
-        Task<OffersRoot> GetOffers(HttpClient client);
-        Task<AnnytabDoxTradeRoot> GetOffer(HttpClient client, string id);
-        Task<OrdersRoot> GetOrders(HttpClient client);
-        Task<IList<AnnytabDoxTradeRoot>> GetOrder(HttpClient client, string id);
-        Task<InvoicesRoot> GetInvoices(HttpClient client);
-        Task<AnnytabDoxTradeRoot> GetInvoice(HttpClient client, string id);
+        Task<Dictionary<string, string>> GetLabels();
+        Task<CompanySettingsRoot> GetCompanySettings();
+        Task<OffersRoot> GetOffers();
+        Task<AnnytabDoxTradeRoot> GetOffer(string id);
+        Task<OrdersRoot> GetOrders();
+        Task<IList<AnnytabDoxTradeRoot>> GetOrder(string id);
+        Task<InvoicesRoot> GetInvoices();
+        Task<AnnytabDoxTradeRoot> GetInvoice(string id);
 
     } // End of the class
 

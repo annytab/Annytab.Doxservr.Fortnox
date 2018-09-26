@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.Net.Http;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -18,7 +17,7 @@ namespace Annytab.Doxservr.Fortnox
         #region Variables
 
         private readonly ILogger logger;
-        private readonly IFortnoxRepository fortnox_repository;
+        private readonly IFortnoxClient nox_client;
         private readonly DefaultValues default_values;
         private CompanySettingsRoot _company_settings;
         private Dictionary<string, string> _labels;
@@ -30,11 +29,11 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Create a new fortnox exporter
         /// </summary>
-        public FortnoxExporter(ILogger<FortnoxExporter> logger, IFortnoxRepository fortnox_repository, IOptions<DefaultValues> default_values)
+        public FortnoxExporter(ILogger<IFortnoxExporter> logger, IFortnoxClient nox_client, IOptions<DefaultValues> default_values)
         {
             // Set values for instance variables
             this.logger = logger;
-            this.fortnox_repository = fortnox_repository;
+            this.nox_client = nox_client;
             this.default_values = default_values.Value;
             this._company_settings = null;
             this._labels = null;
@@ -48,7 +47,7 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Get labels
         /// </summary>
-        public async Task<Dictionary<string, string>> GetLabels(HttpClient client)
+        public async Task<Dictionary<string, string>> GetLabels()
         {
             // Return labels if they already exists
             if (this._labels != null)
@@ -57,10 +56,16 @@ namespace Annytab.Doxservr.Fortnox
             }
 
             // Get labels
-            LabelsRoot root = await this.fortnox_repository.Get<LabelsRoot>(client, "labels");
+            FortnoxResponse<LabelsRoot> fr = await this.nox_client.Get<LabelsRoot>("labels");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
 
             // Make sure that root and root.Labels not is null
-            if (root == null || root.Labels == null)
+            if (fr.model == null || fr.model.Labels == null)
             {
                 return new Dictionary<string, string>();
             }
@@ -69,7 +74,7 @@ namespace Annytab.Doxservr.Fortnox
             this._labels = new Dictionary<string, string>();
 
             // Loop the list
-            foreach(Label label in root.Labels)
+            foreach(Label label in fr.model.Labels)
             {
                 this._labels.Add(label.Id, label.Description);
             }
@@ -82,7 +87,7 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Get company settings
         /// </summary>
-        public async Task<CompanySettingsRoot> GetCompanySettings(HttpClient client)
+        public async Task<CompanySettingsRoot> GetCompanySettings()
         {
             // Return company settings if they already exists
             if(this._company_settings != null)
@@ -91,7 +96,16 @@ namespace Annytab.Doxservr.Fortnox
             }
 
             // Get company settings
-            this._company_settings = await this.fortnox_repository.Get<CompanySettingsRoot>(client, "settings/company");
+            FortnoxResponse<CompanySettingsRoot> fr = await this.nox_client.Get<CompanySettingsRoot>("settings/company");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
+
+            // Create a reference to company settings
+            this._company_settings = fr.model;
 
             // Return company settings
             return this._company_settings;
@@ -105,14 +119,22 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Get offers
         /// </summary>
-        public async Task<OffersRoot> GetOffers(HttpClient client)
+        public async Task<OffersRoot> GetOffers()
         {
             // Variables
             Int32 page = 1;
 
-            // Get the list and the total number of pages
-            OffersRoot root = await this.fortnox_repository.Get<OffersRoot>(client, $"offers?sent=false&limit=10&page={page}");
-            Int32? total_pages = root != null && root.MetaInformation != null ? root.MetaInformation.TotalPages : 1;
+            // Get a page with offers
+            FortnoxResponse<OffersRoot> fr = await this.nox_client.Get<OffersRoot>($"offers?sent=false&limit=10&page={page}");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
+
+            // Calculate the total number of pages
+            Int32? total_pages = fr.model != null && fr.model.MetaInformation != null ? fr.model.MetaInformation.TotalPages : 1;
 
             // Loop while there is more pages to get
             while (page < total_pages)
@@ -121,51 +143,59 @@ namespace Annytab.Doxservr.Fortnox
                 page += 1;
 
                 // Get the next page
-                OffersRoot next_page = await this.fortnox_repository.Get<OffersRoot>(client, $"offers?sent=false&limit=10&page={page}");
+                FortnoxResponse<OffersRoot> fr_next_page = await this.nox_client.Get<OffersRoot>($"offers?sent=false&limit=10&page={page}");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr_next_page.error) == false)
+                {
+                    this.logger.LogError(fr_next_page.error);
+                }
 
                 // Add posts
-                if (next_page != null && next_page.Offers != null)
+                if (fr_next_page.model != null && fr_next_page.model.Offers != null)
                 {
-                    foreach (Offer offer in next_page.Offers)
+                    foreach (Offer offer in fr_next_page.model.Offers)
                     {
-                        root.Offers.Add(offer);
+                        fr.model.Offers.Add(offer);
                     }
                 }
             }
 
-            // Return the root post
-            return root;
+            // Return the model
+            return fr.model;
 
         } // End of the GetOffers method
 
         /// <summary>
         /// Get an offer to export
         /// </summary>
-        public async Task<AnnytabDoxTradeRoot> GetOffer(HttpClient client, string id)
+        public async Task<AnnytabDoxTradeRoot> GetOffer(string id)
         {
             // Get data
-            Dictionary<string, string> labels = await GetLabels(client);
-            CompanySettingsRoot company = await GetCompanySettings(client);
+            Dictionary<string, string> labels = await GetLabels();
+            CompanySettingsRoot company = await GetCompanySettings();
 
             // Make sure that company and company.Settings not is null
             if(company == null || company.CompanySettings == null)
             {
-                this.logger.LogError("Could not find any company settings.");
+                this.logger.LogError($"GetOffer: {id}, Could not find any company settings.");
                 return null;
             }
 
             // Get the offer
-            OfferRoot root = await this.fortnox_repository.Get<OfferRoot>(client, $"offers/{id}");
+            FortnoxResponse<OfferRoot> fr = await this.nox_client.Get<OfferRoot>($"offers/{id}");
 
-            // Return if root or root.Offer is null
-            if(root == null || root.Offer == null)
+            // Return if model or model.Offer is null
+            if (fr.model == null || fr.model.Offer == null)
             {
+                // Log the error and return null
+                this.logger.LogError(fr.error);
                 return null;
             }
 
             // Check if the offer should be exported
             bool export_offer = false;
-            foreach(Label label in root.Offer.Labels)
+            foreach(Label label in fr.model.Offer.Labels)
             {
                 if(labels.ContainsKey(label.Id) && labels[label.Id] == "a-dox-trade-v1")
                 {
@@ -182,19 +212,21 @@ namespace Annytab.Doxservr.Fortnox
             }
 
             // Get the customer
-            CustomerRoot customer_root = await this.fortnox_repository.Get<CustomerRoot>(client, $"customers/{root.Offer.CustomerNumber}");
+            FortnoxResponse<CustomerRoot> fr_customer = await this.nox_client.Get<CustomerRoot>($"customers/{fr.model.Offer.CustomerNumber}");
 
-            // Return if customer_root or customer_root.Customer is null
-            if(customer_root == null || customer_root.Customer == null)
+            // Return if modle or model.Customer is null
+            if(fr_customer.model == null || fr_customer.model.Customer == null)
             {
+                // Log the error and return null
+                this.logger.LogError(fr_customer.error);
                 return null;
             }
 
             // Create a quotation
-            AnnytabDoxTrade post = await CreateQuotation(client, company, root, customer_root);
+            AnnytabDoxTrade post = await CreateQuotation(company, fr.model, fr_customer.model);
  
             // Return the post
-            return new AnnytabDoxTradeRoot { document_type = post.document_type, document = post, email = customer_root.Customer.Email, language_code = root.Offer.Language };
+            return new AnnytabDoxTradeRoot { document_type = post.document_type, document = post, email = fr_customer.model.Customer.Email, language_code = fr.model.Offer.Language };
 
         } // End of the GetOffer method
 
@@ -205,14 +237,22 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Get orders
         /// </summary>
-        public async Task<OrdersRoot> GetOrders(HttpClient client)
+        public async Task<OrdersRoot> GetOrders()
         {
             // Variables
             Int32 page = 1;
 
-            // Get the list and the total number of pages
-            OrdersRoot root = await this.fortnox_repository.Get<OrdersRoot>(client, $"orders?sent=false&limit=10&page={page}");
-            Int32? total_pages = root != null && root.MetaInformation != null ? root.MetaInformation.TotalPages : 1;
+            // Get a page with orders
+            FortnoxResponse<OrdersRoot> fr = await this.nox_client.Get<OrdersRoot>($"orders?sent=false&limit=10&page={page}");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
+
+            // Calculate the total number of pages
+            Int32? total_pages = fr.model != null && fr.model.MetaInformation != null ? fr.model.MetaInformation.TotalPages : 1;
 
             // Loop while there is more pages to get
             while (page < total_pages)
@@ -221,52 +261,60 @@ namespace Annytab.Doxservr.Fortnox
                 page += 1;
 
                 // Get the next page
-                OrdersRoot next_page = await this.fortnox_repository.Get<OrdersRoot>(client, $"orders?sent=false&limit=10&page={page}");
+                FortnoxResponse<OrdersRoot> fr_next_page = await this.nox_client.Get<OrdersRoot>($"orders?sent=false&limit=10&page={page}");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr_next_page.error) == false)
+                {
+                    this.logger.LogError(fr_next_page.error);
+                }
 
                 // Add posts
-                if (next_page != null && next_page.Orders != null)
+                if (fr_next_page.model != null && fr_next_page.model.Orders != null)
                 {
-                    foreach (Order order in next_page.Orders)
+                    foreach (Order order in fr_next_page.model.Orders)
                     {
-                        root.Orders.Add(order);
+                        fr.model.Orders.Add(order);
                     }
                 }
             }
 
-            // Return the root post
-            return root;
+            // Return the model
+            return fr.model;
 
         } // End of the GetOrders method
 
         /// <summary>
         /// Get an order to export
         /// </summary>
-        public async Task<IList<AnnytabDoxTradeRoot>> GetOrder(HttpClient client, string id)
+        public async Task<IList<AnnytabDoxTradeRoot>> GetOrder(string id)
         {
             // Get data
-            Dictionary<string, string> labels = await GetLabels(client);
-            CompanySettingsRoot company = await GetCompanySettings(client);
+            Dictionary<string, string> labels = await GetLabels();
+            CompanySettingsRoot company = await GetCompanySettings();
 
             // Make sure that company and company.Settings not is null
             if (company == null || company.CompanySettings == null)
             {
-                this.logger.LogError("Could not find any company settings.");
+                this.logger.LogError($"GetOrder: {id}, Could not find any company settings.");
                 return null;
             }
 
             // Get the order
-            OrderRoot root = await this.fortnox_repository.Get<OrderRoot>(client, $"orders/{id}");
+            FortnoxResponse<OrderRoot> fr = await this.nox_client.Get<OrderRoot>($"orders/{id}");
 
-            // Return if root or root.Order is null
-            if (root == null || root.Order == null)
+            // Return if model or model.Order is null
+            if (fr.model == null || fr.model.Order == null)
             {
+                // Log the error and return null
+                this.logger.LogError(fr.error);
                 return null;
             }
 
             // Check if the order should be exported
             bool export_order = false;
             bool export_purchase_orders = false;
-            foreach (Label label in root.Order.Labels)
+            foreach (Label label in fr.model.Order.Labels)
             {
                 if (labels.ContainsKey(label.Id) && labels[label.Id] == "a-dox-trade-v1")
                 {
@@ -287,11 +335,13 @@ namespace Annytab.Doxservr.Fortnox
             }
 
             // Get the customer
-            CustomerRoot customer_root = await this.fortnox_repository.Get<CustomerRoot>(client, $"customers/{root.Order.CustomerNumber}");
+            FortnoxResponse<CustomerRoot> fr_customer = await this.nox_client.Get<CustomerRoot>($"customers/{fr.model.Order.CustomerNumber}");
 
-            // Return if customer_root or customer_root.Customer is null
-            if (customer_root == null || customer_root.Customer == null)
+            // Return if model or model.Customer is null
+            if (fr_customer.model == null || fr_customer.model.Customer == null)
             {
+                // Log the error and return null
+                this.logger.LogError(fr_customer.error);
                 return null;
             }
 
@@ -301,60 +351,77 @@ namespace Annytab.Doxservr.Fortnox
             // Create an order confirmation
             if(export_order == true)
             {
-                AnnytabDoxTrade post = await CreateOrderConfirmation(client, company, root, customer_root);
-                posts.Add(new AnnytabDoxTradeRoot { document_type = post.document_type, document = post, email = customer_root.Customer.Email, language_code = root.Order.Language });
+                AnnytabDoxTrade post = await CreateOrderConfirmation(company, fr.model, fr_customer.model);
+                posts.Add(new AnnytabDoxTradeRoot { document_type = post.document_type, document = post, email = fr_customer.model.Customer.Email, language_code = fr.model.Order.Language });
             }
 
             // Create purchase orders
             if(export_purchase_orders == true)
             {
-                // Create a dictionary
+                // Create variables
                 IDictionary<string, SupplierRoot> suppliers = new Dictionary<string, SupplierRoot>();
                 IDictionary<string, IList<ProductRow>> supplier_rows = new Dictionary<string, IList<ProductRow>>();
                 decimal? total_weight = 0M;
 
                 // Get suppliers
-                foreach (OrderRow row in root.Order.OrderRows)
+                foreach (OrderRow row in fr.model.Order.OrderRows)
                 {
                     // Get the article
-                    ArticleRoot article_root = await this.fortnox_repository.Get<ArticleRoot>(client, $"articles/{row.ArticleNumber}");
+                    FortnoxResponse<ArticleRoot> fr_article = await this.nox_client.Get<ArticleRoot>($"articles/{row.ArticleNumber}");
 
-                    if(article_root != null && article_root.Article != null)
+                    // Make sure that the article was found
+                    if (fr_article.model != null && fr_article.model.Article != null)
                     {
                         // Get the supplier
-                        if(string.IsNullOrEmpty(article_root.Article.SupplierNumber) == false)
+                        if(string.IsNullOrEmpty(fr_article.model.Article.SupplierNumber) == false)
                         {
                             // Check if the supplier exists
-                            if (suppliers.ContainsKey(article_root.Article.SupplierNumber) == false)
+                            if (suppliers.ContainsKey(fr_article.model.Article.SupplierNumber) == false)
                             {
+                                // Get the supplier
+                                FortnoxResponse<SupplierRoot> fr_supplier = await this.nox_client.Get<SupplierRoot>($"suppliers/{fr_article.model.Article.SupplierNumber}");
+
                                 // Add the supplier
-                                suppliers.Add(article_root.Article.SupplierNumber, await this.fortnox_repository.Get<SupplierRoot>(client, $"suppliers/{article_root.Article.SupplierNumber}"));
+                                if(fr_supplier != null && fr_supplier.model != null)
+                                {
+                                    // Add the supplier
+                                    suppliers.Add(fr_article.model.Article.SupplierNumber, fr_supplier.model);
+                                }
+                                else
+                                {
+                                    this.logger.LogError(fr_supplier.error);
+                                }
                             }
 
                             // Check if the supplier has order rows
-                            if(supplier_rows.ContainsKey(article_root.Article.SupplierNumber) == false)
+                            if(supplier_rows.ContainsKey(fr_article.model.Article.SupplierNumber) == false && suppliers.ContainsKey(fr_article.model.Article.SupplierNumber) == true)
                             {
                                 // Add the row
-                                supplier_rows.Add(article_root.Article.SupplierNumber, new List<ProductRow>());
+                                supplier_rows.Add(fr_article.model.Article.SupplierNumber, new List<ProductRow>());
                             }
 
                             // Add to the total weight
-                            total_weight += article_root.Article.Weight != null ? (article_root.Article.Weight * row.OrderedQuantity) / 1000M : 0;
+                            total_weight += fr_article.model.Article.Weight != null ? (fr_article.model.Article.Weight * row.OrderedQuantity) / 1000M : 0;
 
                             // Add the row
-                            supplier_rows[article_root.Article.SupplierNumber].Add(new ProductRow
+                            supplier_rows[fr_article.model.Article.SupplierNumber].Add(new ProductRow
                             {
-                                product_code = article_root.Article.ArticleNumber,
-                                manufacturer_code = article_root.Article.ManufacturerArticleNumber,
-                                gtin = article_root.Article.EAN,
-                                product_name = article_root.Article.Description,
+                                product_code = fr_article.model.Article.ArticleNumber,
+                                manufacturer_code = fr_article.model.Article.ManufacturerArticleNumber,
+                                gtin = fr_article.model.Article.EAN,
+                                product_name = fr_article.model.Article.Description,
                                 vat_rate = row.VAT / 100,
                                 quantity = row.OrderedQuantity,
                                 unit_code = row.Unit,
-                                unit_price = article_root.Article.PurchasePrice, // 0M
+                                unit_price = fr_article.model.Article.PurchasePrice, // 0M
                                 subrows = null
                             });
                         }
+                    }
+                    else
+                    {
+                        // Log the error
+                        this.logger.LogError(fr_article.error);
                     }
                 }
 
@@ -362,7 +429,7 @@ namespace Annytab.Doxservr.Fortnox
                 foreach(KeyValuePair<string, SupplierRoot> entry in suppliers)
                 {
                     // Create a purchase order
-                    AnnytabDoxTrade post = CreatePurchaseOrder(client, company, root, entry.Value, supplier_rows[entry.Key], total_weight);
+                    AnnytabDoxTrade post = CreatePurchaseOrder(company, fr.model, entry.Value, supplier_rows[entry.Key], total_weight);
 
                     // Add the document
                     posts.Add(new AnnytabDoxTradeRoot { document_type = "purchase_order_" + entry.Value.Supplier.SupplierNumber, document = post,
@@ -382,14 +449,22 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Get invoices
         /// </summary>
-        public async Task<InvoicesRoot> GetInvoices(HttpClient client)
+        public async Task<InvoicesRoot> GetInvoices()
         {
             // Variables
             Int32 page = 1;
 
-            // Get the list and the total number of pages
-            InvoicesRoot root = await this.fortnox_repository.Get<InvoicesRoot>(client, $"invoices?sent=false&limit=10&page={page}");
-            Int32? total_pages = root != null && root.MetaInformation != null ? root.MetaInformation.TotalPages : 1;
+            // Get a page with invoices
+            FortnoxResponse<InvoicesRoot> fr = await this.nox_client.Get<InvoicesRoot>($"invoices?sent=false&limit=10&page={page}");
+
+            // Log errors
+            if (string.IsNullOrEmpty(fr.error) == false)
+            {
+                this.logger.LogError(fr.error);
+            }
+
+            // Calculate the total number of pages
+            Int32? total_pages = fr.model != null && fr.model.MetaInformation != null ? fr.model.MetaInformation.TotalPages : 1;
 
             // Loop while there is more pages to get
             while (page < total_pages)
@@ -398,51 +473,59 @@ namespace Annytab.Doxservr.Fortnox
                 page += 1;
 
                 // Get the next page
-                InvoicesRoot next_page = await this.fortnox_repository.Get<InvoicesRoot>(client, $"invoices?sent=false&limit=10&page={page}");
+                FortnoxResponse<InvoicesRoot> fr_next_page = await this.nox_client.Get<InvoicesRoot>($"invoices?sent=false&limit=10&page={page}");
+
+                // Log errors
+                if (string.IsNullOrEmpty(fr_next_page.error) == false)
+                {
+                    this.logger.LogError(fr_next_page.error);
+                }
 
                 // Add posts
-                if (next_page != null && next_page.Invoices != null)
+                if (fr_next_page.model != null && fr_next_page.model.Invoices != null)
                 {
-                    foreach (Invoice invoice in next_page.Invoices)
+                    foreach (Invoice invoice in fr_next_page.model.Invoices)
                     {
-                        root.Invoices.Add(invoice);
+                        fr.model.Invoices.Add(invoice);
                     }
                 }
             }
 
             // Return the root post
-            return root;
+            return fr.model;
 
         } // End of the GetInvoices method
 
         /// <summary>
         /// Get an invoice to export
         /// </summary>
-        public async Task<AnnytabDoxTradeRoot> GetInvoice(HttpClient client, string id)
+        public async Task<AnnytabDoxTradeRoot> GetInvoice(string id)
         {
             // Get data
-            Dictionary<string, string> labels = await GetLabels(client);
-            CompanySettingsRoot company = await GetCompanySettings(client);
+            Dictionary<string, string> labels = await GetLabels();
+            CompanySettingsRoot company = await GetCompanySettings();
 
             // Make sure that company and company.Settings not is null
             if (company == null || company.CompanySettings == null)
             {
-                this.logger.LogError("Could not find any company settings.");
+                this.logger.LogError($"GetInvoice: {id}, Could not find any company settings.");
                 return null;
             }
 
             // Get the invoice
-            InvoiceRoot root = await this.fortnox_repository.Get<InvoiceRoot>(client, $"invoices/{id}");
+            FortnoxResponse<InvoiceRoot> fr = await this.nox_client.Get<InvoiceRoot>($"invoices/{id}");
 
-            // Return if root or root.Invoice is null
-            if (root == null || root.Invoice == null)
+            // Return if model or model.Invoice is null
+            if (fr.model == null || fr.model.Invoice == null)
             {
+                // Log the error and return null
+                this.logger.LogError(fr.error);
                 return null;
             }
 
             // Check if the invoice should be exported
             bool export_invoice = false;
-            foreach (Label label in root.Invoice.Labels)
+            foreach (Label label in fr.model.Invoice.Labels)
             {
                 if (labels.ContainsKey(label.Id) && labels[label.Id] == "a-dox-trade-v1")
                 {
@@ -459,19 +542,21 @@ namespace Annytab.Doxservr.Fortnox
             }
 
             // Get the customer
-            CustomerRoot customer_root = await this.fortnox_repository.Get<CustomerRoot>(client, $"customers/{root.Invoice.CustomerNumber}");
+            FortnoxResponse<CustomerRoot> fr_customer = await this.nox_client.Get<CustomerRoot>($"customers/{fr.model.Invoice.CustomerNumber}");
 
-            // Return if customer_root or customer_root.Customer is null
-            if (customer_root == null || customer_root.Customer == null)
+            // Return if model or model.Customer is null
+            if (fr_customer.model == null || fr_customer.model.Customer == null)
             {
+                // Log the error and return null
+                this.logger.LogError(fr_customer.error);
                 return null;
             }
 
             // Create an invoice
-            AnnytabDoxTrade post = await CreateInvoice(client, company, root, customer_root);
+            AnnytabDoxTrade post = await CreateInvoice(company, fr.model, fr_customer.model);
 
             // Return the post
-            return new AnnytabDoxTradeRoot { document_type = post.document_type, document = post, email = customer_root.Customer.Email, language_code = root.Invoice.Language };
+            return new AnnytabDoxTradeRoot { document_type = post.document_type, document = post, email = fr_customer.model.Customer.Email, language_code = fr.model.Invoice.Language };
 
         } // End of the GetInvoice method
 
@@ -482,7 +567,7 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Create a quotation
         /// </summary>
-        private async Task<AnnytabDoxTrade> CreateQuotation(HttpClient client, CompanySettingsRoot company, OfferRoot root, CustomerRoot customer_root)
+        private async Task<AnnytabDoxTrade> CreateQuotation(CompanySettingsRoot company, OfferRoot root, CustomerRoot customer_root)
         {
             // Create a Annytab Dox Trade document
             AnnytabDoxTrade post = new AnnytabDoxTrade();
@@ -530,16 +615,16 @@ namespace Annytab.Doxservr.Fortnox
             foreach (OfferRow row in root.Offer.OfferRows)
             {
                 // Get the article
-                ArticleRoot article_root = await this.fortnox_repository.Get<ArticleRoot>(client, $"articles/{row.ArticleNumber}");
+                FortnoxResponse<ArticleRoot> fr_article = await this.nox_client.Get<ArticleRoot>($"articles/{row.ArticleNumber}");
 
                 // Make sure that article root and article not is null
-                if (article_root == null || article_root.Article == null)
+                if (fr_article.model == null || fr_article.model.Article == null)
                 {
-                    article_root = new ArticleRoot { Article = new Article() };
+                    fr_article.model = new ArticleRoot { Article = new Article() };
                 }
 
                 // Add to the total weight
-                post.total_weight_kg += article_root.Article.Weight != null ? (article_root.Article.Weight * row.Quantity)/ 1000M : 0;
+                post.total_weight_kg += fr_article.model.Article.Weight != null ? (fr_article.model.Article.Weight * row.Quantity)/ 1000M : 0;
 
                 // Calculate the price
                 decimal? price = root.Offer.VATIncluded == true ? row.Price / ((100 + row.VAT) / 100) : row.Price;
@@ -563,9 +648,9 @@ namespace Annytab.Doxservr.Fortnox
                 // Add a product row
                 post.product_rows.Add(new ProductRow
                 {
-                    product_code = article_root.Article.ArticleNumber,
-                    manufacturer_code = article_root.Article.ManufacturerArticleNumber,
-                    gtin = article_root.Article.EAN,
+                    product_code = fr_article.model.Article.ArticleNumber,
+                    manufacturer_code = fr_article.model.Article.ManufacturerArticleNumber,
+                    gtin = fr_article.model.Article.EAN,
                     product_name = row.Description,
                     vat_rate = row.VAT / 100,
                     quantity = row.Quantity,
@@ -590,7 +675,7 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Create an order confirmation
         /// </summary>
-        private async Task<AnnytabDoxTrade> CreateOrderConfirmation(HttpClient client, CompanySettingsRoot company, OrderRoot root, CustomerRoot customer_root)
+        private async Task<AnnytabDoxTrade> CreateOrderConfirmation(CompanySettingsRoot company, OrderRoot root, CustomerRoot customer_root)
         {
             // Create a Annytab Dox Trade document
             AnnytabDoxTrade post = new AnnytabDoxTrade();
@@ -639,16 +724,16 @@ namespace Annytab.Doxservr.Fortnox
             foreach (OrderRow row in root.Order.OrderRows)
             {
                 // Get the article
-                ArticleRoot article_root = await this.fortnox_repository.Get<ArticleRoot>(client, $"articles/{row.ArticleNumber}");
+                FortnoxResponse<ArticleRoot> fr_article = await this.nox_client.Get<ArticleRoot>($"articles/{row.ArticleNumber}");
 
                 // Make sure that article root and article not is null
-                if (article_root == null || article_root.Article == null)
+                if (fr_article.model == null || fr_article.model.Article == null)
                 {
-                    article_root = new ArticleRoot { Article = new Article() };
+                    fr_article.model = new ArticleRoot { Article = new Article() };
                 }
 
                 // Add to the total weight
-                post.total_weight_kg += article_root.Article.Weight != null ? (article_root.Article.Weight * row.OrderedQuantity) / 1000M : 0;
+                post.total_weight_kg += fr_article.model.Article.Weight != null ? (fr_article.model.Article.Weight * row.OrderedQuantity) / 1000M : 0;
 
                 // Calculate the price
                 decimal? price = root.Order.VATIncluded == true ? row.Price / ((100 + row.VAT) / 100) : row.Price;
@@ -672,9 +757,9 @@ namespace Annytab.Doxservr.Fortnox
                 // Add a product row
                 post.product_rows.Add(new ProductRow
                 {
-                    product_code = article_root.Article.ArticleNumber,
-                    manufacturer_code = article_root.Article.ManufacturerArticleNumber,
-                    gtin = article_root.Article.EAN,
+                    product_code = fr_article.model.Article.ArticleNumber,
+                    manufacturer_code = fr_article.model.Article.ManufacturerArticleNumber,
+                    gtin = fr_article.model.Article.EAN,
                     product_name = row.Description,
                     vat_rate = row.VAT / 100,
                     quantity = row.OrderedQuantity,
@@ -687,7 +772,7 @@ namespace Annytab.Doxservr.Fortnox
             decimal? freight_fee = AddFreight(root.Order.VATIncluded, root.Order.Freight, root.Order.FreightVAT, post.product_rows, root.Order.Language);
             post.vat_specification = CommonTools.GetVatSpecification(post.product_rows);
             post.subtotal = root.Order.Net + invoice_fee + freight_fee;
-            post.vat_total = root.Order.TotalVat;
+            post.vat_total = root.Order.TotalVAT;
             post.rounding = root.Order.RoundOff;
             post.total = root.Order.Total;
 
@@ -699,8 +784,7 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Create a purchase order
         /// </summary>
-        private AnnytabDoxTrade CreatePurchaseOrder(HttpClient client, CompanySettingsRoot company, OrderRoot root, 
-            SupplierRoot supplier_root, IList<ProductRow> product_rows, decimal? total_weight)
+        private AnnytabDoxTrade CreatePurchaseOrder(CompanySettingsRoot company, OrderRoot root, SupplierRoot supplier_root, IList<ProductRow> product_rows, decimal? total_weight)
         {
             // Calculate totals
             decimal? net_sum = 0;
@@ -711,7 +795,7 @@ namespace Annytab.Doxservr.Fortnox
                 vat_sum += row.unit_price * row.quantity * row.vat_rate;
             }
 
-            // Create a Annytab Dox Trade document DateTime.Now.ToString("yyyyMMddHHmmssfff", CultureInfo.InvariantCulture)
+            // Create a Annytab Dox Trade document
             AnnytabDoxTrade post = new AnnytabDoxTrade();
             post.id = root.Order.DocumentNumber;
             post.document_type = "order";
@@ -766,7 +850,7 @@ namespace Annytab.Doxservr.Fortnox
         /// <summary>
         /// Create a invoice
         /// </summary>
-        private async Task<AnnytabDoxTrade> CreateInvoice(HttpClient client, CompanySettingsRoot company, InvoiceRoot root, CustomerRoot customer_root)
+        private async Task<AnnytabDoxTrade> CreateInvoice(CompanySettingsRoot company, InvoiceRoot root, CustomerRoot customer_root)
         {
             // Create a Annytab Dox Trade document
             AnnytabDoxTrade post = new AnnytabDoxTrade();
@@ -819,16 +903,16 @@ namespace Annytab.Doxservr.Fortnox
             foreach (InvoiceRow row in root.Invoice.InvoiceRows)
             {
                 // Get the article
-                ArticleRoot article_root = await this.fortnox_repository.Get<ArticleRoot>(client, $"articles/{row.ArticleNumber}");
+                FortnoxResponse<ArticleRoot> fr_article = await this.nox_client.Get<ArticleRoot>($"articles/{row.ArticleNumber}");
 
                 // Make sure that article root and article not is null
-                if (article_root == null || article_root.Article == null)
+                if (fr_article.model == null || fr_article.model.Article == null)
                 {
-                    article_root = new ArticleRoot { Article = new Article() };
+                    fr_article.model = new ArticleRoot { Article = new Article() };
                 }
 
                 // Add to the total weight
-                post.total_weight_kg += article_root.Article.Weight != null ? (article_root.Article.Weight * row.DeliveredQuantity) / 1000M : 0;
+                post.total_weight_kg += fr_article.model.Article.Weight != null ? (fr_article.model.Article.Weight * row.DeliveredQuantity) / 1000M : 0;
 
                 // Calculate the price
                 decimal? price = root.Invoice.VATIncluded == true ? row.Price / ((100 + row.VAT) / 100) : row.Price;
@@ -852,9 +936,9 @@ namespace Annytab.Doxservr.Fortnox
                 // Add a product row
                 post.product_rows.Add(new ProductRow
                 {
-                    product_code = article_root.Article.ArticleNumber,
-                    manufacturer_code = article_root.Article.ManufacturerArticleNumber,
-                    gtin = article_root.Article.EAN,
+                    product_code = fr_article.model.Article.ArticleNumber,
+                    manufacturer_code = fr_article.model.Article.ManufacturerArticleNumber,
+                    gtin = fr_article.model.Article.EAN,
                     product_name = row.Description,
                     vat_rate = row.VAT / 100,
                     quantity = row.DeliveredQuantity,

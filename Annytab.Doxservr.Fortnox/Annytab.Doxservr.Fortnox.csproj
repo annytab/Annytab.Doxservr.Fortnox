@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
     <NeutralLanguage>English</NeutralLanguage>
     <AssemblyName>Annytab.Doxservr.Fortnox</AssemblyName>
     <RootNamespace>Annytab.Doxservr.Fortnox</RootNamespace>
@@ -13,18 +14,18 @@
     <Copyright>Copyright © 2017</Copyright>
     <PackageIconUrl>http://www.annytab.com/annytab_logo_512x512.png</PackageIconUrl>
     <PackageTags>ASP.NET, .NET, Core, C#, Doxservr, Fortnox</PackageTags>
-    <PackageReleaseNotes>Upgraded to ASP.NET 2.1 and are now using typed clients.</PackageReleaseNotes>
+    <PackageReleaseNotes>Upgraded to ASP.NET Core 2.2.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/annytab/a-doxservr-fortnox</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/annytab/a-doxservr-fortnox/blob/master/LICENSE</PackageLicenseUrl>
-    <Version>1.0.6</Version>
+    <Version>1.0.7</Version>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.4" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Annytab.Dox.Standards" Version="1.0.4" />
-    <PackageReference Include="Annytab.Doxservr.Client" Version="1.0.4" />
-    <PackageReference Include="Annytab.Fortnox.Client" Version="1.0.4" />
+    <PackageReference Include="Annytab.Doxservr.Client" Version="1.0.5" />
+    <PackageReference Include="Annytab.Fortnox.Client" Version="1.0.5" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="1.1.0" />
   </ItemGroup>
 

@@ -47,8 +47,12 @@ namespace Annytab.Doxservr.Fortnox
             // Create a service collection
             IServiceCollection services = new ServiceCollection();
 
-            // Add services for logging and for options
-            services.AddLogging();
+            // Add logging and options as services
+            services.AddLogging(logging => {
+                logging.AddConfiguration(configuration.GetSection("Logging"));
+                logging.AddConsole();
+                logging.AddDebug();
+            });
             services.AddOptions();
 
             // Create api options
@@ -69,10 +73,8 @@ namespace Annytab.Doxservr.Fortnox
             // Build a service provider
             IServiceProvider serviceProvider = services.BuildServiceProvider();
 
-            // Configure logging
+            // Configure file logging
             ILoggerFactory loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-            loggerFactory.AddConsole(configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
             loggerFactory.AddFile(directory + "\\Logs\\log-{Date}.txt");
 
             // Get the worker repository

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,9 +63,12 @@ namespace Annytab.Doxservr.Fortnox
             services.Configure<DefaultValues>(configuration.GetSection("DefaultValues"));
 
             // Add clients
-            services.AddHttpClient<IFortnoxClient, FortnoxClient>();
-            services.AddHttpClient<IDoxservrFilesClient, DoxservrFilesClient>();
-            services.AddHttpClient<IFixerClient, FixerClient>();
+            services.AddHttpClient<IFortnoxClient, FortnoxClient>().ConfigurePrimaryHttpMessageHandler(() =>
+                new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
+            services.AddHttpClient<IDoxservrFilesClient, DoxservrFilesClient>().ConfigurePrimaryHttpMessageHandler(() =>
+                new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
+            services.AddHttpClient<IFixerClient, FixerClient>().ConfigurePrimaryHttpMessageHandler(() =>
+                new HttpClientHandler { AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate });
 
             // Add repositories
             services.AddScoped<IFortnoxImporter, FortnoxImporter>();

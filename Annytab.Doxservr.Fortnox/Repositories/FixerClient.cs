@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -33,16 +32,9 @@ namespace Annytab.Doxservr.Fortnox
             this.client = http_client;
             this.default_values = options.Value;
 
-            // Create a http client
-            HttpClientHandler handler = new HttpClientHandler
-            {
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.None
-            };
-            this.client = new HttpClient(handler);
+            // Set values for the client
             this.client.BaseAddress = new Uri("http://api.fixer.io");
             this.client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            this.client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
-            this.client.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("*"));
 
         } // End of the constructor
 

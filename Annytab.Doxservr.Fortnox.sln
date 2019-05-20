@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27004.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Annytab.Doxservr.Fortnox", "Annytab.Doxservr.Fortnox\Annytab.Doxservr.Fortnox.csproj", "{35865F33-2828-45DC-AEE2-82633091E338}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestProgram", "TestProgram\TestProgram.csproj", "{2FB7CE01-F77E-405F-9773-03C8DC657CD1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Annytab.Doxservr.Fortnox.Functions", "Annytab.Doxservr.Fortnox.Functions\Annytab.Doxservr.Fortnox.Functions.csproj", "{CAC79A4E-727F-4617-9BD6-3E7D5A9AF915}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Annytab.Doxservr.Fortnox.App", "Annytab.Doxservr.Fortnox.App\Annytab.Doxservr.Fortnox.App.csproj", "{11F8E626-57E6-47A7-AA06-66D5A83BE919}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,14 +15,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{35865F33-2828-45DC-AEE2-82633091E338}.Debug|Any CPU.ActiveCfg = Release|Any CPU
-		{35865F33-2828-45DC-AEE2-82633091E338}.Debug|Any CPU.Build.0 = Release|Any CPU
-		{35865F33-2828-45DC-AEE2-82633091E338}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{35865F33-2828-45DC-AEE2-82633091E338}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2FB7CE01-F77E-405F-9773-03C8DC657CD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2FB7CE01-F77E-405F-9773-03C8DC657CD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FB7CE01-F77E-405F-9773-03C8DC657CD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FB7CE01-F77E-405F-9773-03C8DC657CD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAC79A4E-727F-4617-9BD6-3E7D5A9AF915}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAC79A4E-727F-4617-9BD6-3E7D5A9AF915}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAC79A4E-727F-4617-9BD6-3E7D5A9AF915}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAC79A4E-727F-4617-9BD6-3E7D5A9AF915}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11F8E626-57E6-47A7-AA06-66D5A83BE919}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11F8E626-57E6-47A7-AA06-66D5A83BE919}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11F8E626-57E6-47A7-AA06-66D5A83BE919}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11F8E626-57E6-47A7-AA06-66D5A83BE919}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

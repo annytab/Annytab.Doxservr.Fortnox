@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+    <NeutralLanguage>English</NeutralLanguage>
+    <AssemblyName>Annytab.Doxservr.Fortnox.App</AssemblyName>
+    <RootNamespace>Annytab.Doxservr.Fortnox.App</RootNamespace>
+    <Authors>A Name Not Yet Taken AB</Authors>
+    <Company>A Name Not Yet Taken AB</Company>
+    <Product>a-doxservr-fortnox</Product>
+    <Description>This is a console application that synchronizes electronic documents between Doxservr (www.doxservr.com) and Fortnox (www.fortnox.se). This application imports offers, orders, invoices and credit invoices to Fortnox from Doxservr and sends offers, orders, invoices and credit invoices from Fortnox through Doxservr to receivers. This application only handles electronic documents that has been createad with the Annytab Dox Trade standard.</Description>
+    <Copyright>Copyright © 2017</Copyright>
+    <PackageIconUrl>http://www.annytab.com/annytab_logo_512x512.png</PackageIconUrl>
+    <PackageTags>ASP.NET, .NET, Core, C#, Doxservr, Fortnox</PackageTags>
+    <PackageReleaseNotes>Changed the namespace to Annytab.Doxservr.Fortnox.App and removed Unit from SupplierInvoiceRow.</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/annytab/a-doxservr-fortnox</PackageProjectUrl>
+    <Version>1.0.9</Version>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Annytab.Dox.Standards" Version="1.0.4" />
+    <PackageReference Include="Annytab.Doxservr.Client" Version="1.0.6" />
+    <PackageReference Include="Annytab.Fortnox.Client" Version="1.0.6" />
+    <PackageReference Include="Serilog.Extensions.Logging.File" Version="1.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.template.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="run.cmd">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="settings.job">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -1,11 +1,11 @@
 # a-doxservr-fortnox
-This is a console application that synchronizes electronic documents between Doxservr 
-([www.doxservr.com](https://www.doxservr.com)) and Fortnox ([www.fortnox.se](https://www.fortnox.se)). 
-This application imports offers, orders, invoices and credit invoices to Fortnox from Doxservr and sends offers, orders, purchase orders, 
+This solution includes applications to synchronizes electronic documents between Doxservr 
+([www.doxservr.com](https://www.doxservr.com)) and Fortnox ([www.fortnox.se](https://www.fortnox.se)). This solution includes 
+a console application and Azure Functions, both projects imports offers, orders, invoices and credit invoices to Fortnox from Doxservr and sends offers, orders, purchase orders, 
 invoices and credit invoices from Fortnox through Doxservr to receivers. This application only handles electronic documents 
 that has been createad with the Annytab Dox Trade standard.
 
-## Getting started
+## Console Application
 Decide on a directory that should be used to contain the appsettings.json file and to which files and logs should be 
 saved. The default directory is "D:\\home\\AnnytabDoxservrFortnox" and this directory will work for a web job on 
 Azure. You can choose any directory to contain files for the application but you have to add the directory path 
@@ -47,7 +47,7 @@ AuthorizationCode (API-kod).
 - **PurchaseAccount:** Account for purchases (expenses). Must exist and be active in Fortnox, is added to new articles.
 - **OnlyAllowTrustedSenders:** Set this value to true if you only want to allow documents from trusted senders to be imported to Fortnox. You can add email addresses to a list of trusted email addresses in Fortnox (Inställningar/Arkivplats).
 
-## Run the program
+### Run the program
 The purpose of this program is that it should run on a schedule, triggered from a task scheduler program or from Azure. This program 
 should run on only one instance, a triggered Azure web job will run on just one instance selected at random. The 
 run.cmd file and the settings.job file are used if this program is running as a web job on Azure. The settings.job file includes 
@@ -56,7 +56,7 @@ a cron expression that tells Azure when the web job should be triggered.
 You can optionally pass a directory path as an argument when you run the program, the default directory is "D:\\home\\AnnytabDoxservrFortnox" and 
 this directory will be used if no directory path is specified.
 
-> Command: dotnet Annytab.Doxservr.Fortnox.dll "D:\\home\\AnnytabDoxservrFortnox"
+> Command: dotnet Annytab.Doxservr.Fortnox.App.dll "D:\\home\\AnnytabDoxservrFortnox"
 
 This program saves files to the choosen directory folder and folders under this folder. Files that are imported and exported are saved 
 to the Files folder and loggfiles are saved to the Logs folder. Logs are important to get information about program 
@@ -66,7 +66,7 @@ You need to publish the project to a folder in order to get all the files that i
 bin/Debug or bin/Release is just a subset of the files needed. In Visual Studio click on Publish Annytab.Doxservr.Fortnox 
 from the Build menu to publish the project to a folder.
 
-## Import files to Fortnox
+### Import files to Fortnox
 This program gets files that not have been downloaded (Status: 0) from your doxservr account and saves files 
 that have a standard name of "Annytab Dox Trade v1" to the Files folder, the meta information for these files are 
 saved to the Files/Meta folder.
@@ -111,7 +111,7 @@ Each file is moved to the Imported folder if everything goes well and no errors 
 the Files/Meta/Imported folder and files are moved to the Files/Imported folder. If you only allow trusted senders, no 
 documents from untrusted senders will be imported to Fortnox.
 
-## Export files from Fortnox
+### Export files from Fortnox
 You can export documents from Fortnox to customers and suppliers through Doxservr. Exported documents are sent to the email that 
 is set for the customer or supplier in Fortnox. Only documents that not has been marked as Sent can be exported from Fortnox, a document 
 will be marked as Sent if it is printed or sent to an email. You can export documents by adding a label to the document that you want 
@@ -127,6 +127,68 @@ Exported files are saved to the Files/Exported folder with a name according to t
 order is named as purchase_order_{SupplierNumber}_{OrderNumber}. Exported documents will be marked as Sent in Fortnox to not be 
 exported multiple times.
 
+## Azure Functions
+This project includes methods to import documents to Fortnox, export documents from Fortnox and to handle logging in Azure Blob Storage. You need 
+application settings for AzureWebJobsStorage and BlobContainerName. The setting for AzureWebJobsStorage should be a connection string to your 
+blob storage account and BlobContainerName is a name of a container that should be used to store logs.
 
+### FortnoxApiValues (JSON-document)
+- **AccessToken:** You can get an access token by calling GetFortnoxAccessToken with an AuthorizationCode. You get an authorization code when you connect to a Doxservr integration in your Fortnox account.
+- **PriceList:** The default Fortnox price list you use for new articles and new customers that are created from this program.
+- **PenaltyInterest:** The penalty interest expressed on exported offers, orders and invoices. 10 % is expressed as 0.1 (decimal).
+- **SalesVatTypeSE:** The default vat type for customers can be SEVAT or SEREVERSEDVAT, used when a new customer is created.
+- **SalesAccountSE25:** Account for sales to Swedish customers at a vat rate of 25 %. Must exist and be active in Fortnox, is added to new articles.
+- **SalesAccountSE12:** Account for sales to Swedish customers at a vat rate of 12 %. Must exist and be active in Fortnox, is added to new articles.
+- **SalesAccountSE6:** Account for sales to Swedish customers at a vat rate of 6 %. Must exist and be active in Fortnox, is added to new articles.
+- **SalesAccountSE0:** Account for sales to Swedish customers at a vat rate of 0 %. Must exist and be active in Fortnox, is added to new articles.
+- **SalesAccountSEREVERSEDVAT:** Account for sales to Swedish customers when the customer should report value added tax (reversed vat). Must exist and be active in Fortnox, is added to new articles.
+- **SalesAccountEUVAT:** Account for sales to customers in other EU-countries than Sweden with value added tax. Must exist and be active in Fortnox, is added to new articles.
+- **SalesAccountEUREVERSEDVAT:** Account for sales to customers in other EU-countries than Sweden without VAT (reversed vat). Must exist and be active in Fortnox, is added to new articles.
+- **SalesAccountEXPORT:** Account for sales to customers outside of EU, no value added tax. Must exist and be active in Fortnox, is added to new articles.
+- **PurchaseAccount:** Account for purchases (expenses). Must exist and be active in Fortnox, is added to new articles.
+- **StockArticle:** A boolean that indicates if articles should be stock articles as default.
+- **StockAccount:** Account for stock (assets). Must exist and be active in Fortnox, is added to new articles.
+- **StockChangeAccount:** Account for stock change (expenses). Must exist and be active in Fortnox, is added to new articles.
+- **OnlyAllowTrustedSenders:** Set this value to true if you only want to allow documents from trusted senders to be imported to Fortnox. You can add email addresses to a list of trusted email addresses in Fortnox (Inställningar/Arkivplats).
+
+### DoxservrApiValues (JSON-document)
+- **ApiHost:** The doxservr base url, https://www.doxservr.com or https://www.doxservr.se.
+- **ApiEmail:** The email address for your doxservr account.
+- **ApiPassword:** The api password for your doxervr account, you find this in your member details.
+
+### GetFortnoxAccessToken [HttpPost]
+Get a fortnox access token by sending an AuthorizationCode in the body of the request. The authorization code is used 
+once to get an access token, two requests with the same AuthorizationCode will invalidate the access token.
+
+### FortnoxImport [HttpPost]
+Import documents to Fortnox from your Doxservr account by sending a Guid, FortnoxApiValues and DoxservrApiValues in the body of the request. A Guid is 
+used to set the name of the log file, the name must be unique and Guid:s are unique. FortnoxApiValues should be formatted as a JSON-document and 
+DoxservrApiValues should be formatted as a JSON-document. This method gets files that not have been downloaded (Status: 0) from your doxservr account and import
+documents that have a standard name of "Annytab Dox Trade v1".
+
+### FortnoxExport [HttpPost]
+Export documents from Fortnox via your Doxservr account by sending a Guid, FortnoxApiValues and DoxservrApiValues in the body of the request. A Guid is 
+used to set the name of the log file, the name must be unique and Guid:s are unique. FortnoxApiValues should be formatted as a JSON-document and 
+DoxservrApiValues should be formatted as a JSON-document. 
+
+Exported documents are sent to the email that is set for the customer or supplier in Fortnox. Only documents that not has been marked as Sent can be exported from Fortnox, a document 
+will be marked as Sent if it is printed or sent to an email. You can export documents by adding a label to the document that you want to export. 
+
+Add a "a-dox-trade-v1" label to a offer, order, invoice or credit invoice if you want to export it. You can also add a "a-dox-trade-v1-po" label to an order 
+if you want to create purchase orders to suppliers from the order.
+
+### GetLogs [HttpPost]
+Get a list with log_date and log_name by sending an Email in the body of the request. The email corresponds to the email for you Doxservr account, log_date is 
+string formatted as yyyy-MM-ddThh:mm:ss.
+
+### GetLog [HttpPost]
+Get a log as a string by sending a LogName in the body of the request. A log name is formatted as "[Email]/[Guid].log".
+
+### DeleteLog [HttpPost]
+Delete a log by sending a LogName in the body of the request. This method is protected, a function specific API key is required to access this method.
+
+### CleanUpLogs [HttpPost]
+Clean up logs by sending Days in the body of the request, Days refers to the number of days backward in time for witch logs should be kept. This method is protected, 
+a function specific API key is required to access this method. It might be better to use Lifecycle management policy in your storage account to clean up old blobs.
 
 

@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AzureFunctionsVersion>v2</AzureFunctionsVersion>
+    <LangVersion>latest</LangVersion>
+    <Authors>A Name Not Yet Taken AB</Authors>
+    <Product>a-doxservr-fortnox</Product>
+    <Description>Functions</Description>
+    <Copyright>Copyright © 2019</Copyright>
+    <PackageProjectUrl>https://github.com/annytab/a-doxservr-fortnox</PackageProjectUrl>
+    <PackageIconUrl>http://www.annytab.com/annytab_logo_512x512.png</PackageIconUrl>
+    <PackageTags>ASP.NET, .NET, Core, C#, Doxservr, Fortnox</PackageTags>
+    <NeutralLanguage>en</NeutralLanguage>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Annytab.Dox.Standards" Version="1.0.4" />
+    <PackageReference Include="Annytab.Doxservr.Client" Version="1.0.6" />
+    <PackageReference Include="Annytab.Fortnox.Client" Version="1.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.DurableTask" Version="1.8.1" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.28" />
+    <PackageReference Include="MimeTypes" Version="1.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="host.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="local.settings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+</Project>

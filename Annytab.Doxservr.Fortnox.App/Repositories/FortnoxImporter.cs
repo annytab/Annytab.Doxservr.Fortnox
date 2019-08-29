@@ -983,35 +983,35 @@ namespace Annytab.Doxservr.Fortnox.App
             // Create a list with supplier invoice rows
             IList<SupplierInvoiceRow> rows = new List<SupplierInvoiceRow>();
 
-            // Add accounts payable amount
-            if(doc.total != null && doc.total != 0M)
-            {
-                rows.Add(new SupplierInvoiceRow
-                {
-                    Code = "TOT",
-                    Total = doc.total * -1
-                });
-            }
+            //// Add accounts payable amount
+            //if(doc.total != null && doc.total != 0M)
+            //{
+            //    rows.Add(new SupplierInvoiceRow
+            //    {
+            //        Code = "TOT",
+            //        Total = doc.total * -1
+            //    });
+            //}
             
-            // Add value added tax
-            if (doc.vat_total != null && doc.vat_total != 0M)
-            {
-                rows.Add(new SupplierInvoiceRow
-                {
-                    Code = "VAT",
-                    Total = doc.vat_total
-                });
-            }
+            //// Add value added tax
+            //if (doc.vat_total != null && doc.vat_total != 0M)
+            //{
+            //    rows.Add(new SupplierInvoiceRow
+            //    {
+            //        Code = "VAT",
+            //        Total = doc.vat_total
+            //    });
+            //}
 
-            // Add rounding
-            if(doc.rounding != null && doc.rounding != 0M)
-            {
-                rows.Add(new SupplierInvoiceRow
-                {
-                    Code = "ROV",
-                    Total = doc.rounding
-                });
-            }
+            //// Add rounding
+            //if(doc.rounding != null && doc.rounding != 0M)
+            //{
+            //    rows.Add(new SupplierInvoiceRow
+            //    {
+            //        Code = "ROV",
+            //        Total = doc.rounding
+            //    });
+            //}
             
             // Add supplier invoice rows
             if (doc.product_rows != null)
@@ -1030,6 +1030,9 @@ namespace Annytab.Doxservr.Fortnox.App
                     DueDate = string.IsNullOrEmpty(doc.due_date) == false ? doc.due_date : null,
                     Currency = doc.currency_code,
                     Comments = doc.comment,
+                    Total = doc.total != null ? doc.total : 0M,
+                    VAT = doc.vat_total != null ? doc.vat_total : 0M,
+                    RoundOffValue = doc.rounding != null ? doc.rounding : 0M,
                     SupplierInvoiceRows = rows
                 }
             };

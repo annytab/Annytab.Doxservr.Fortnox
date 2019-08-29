@@ -14,9 +14,9 @@
     <Copyright>Copyright © 2017</Copyright>
     <PackageIconUrl>http://www.annytab.com/annytab_logo_512x512.png</PackageIconUrl>
     <PackageTags>ASP.NET, .NET, Core, C#, Doxservr, Fortnox</PackageTags>
-    <PackageReleaseNotes>Changed the namespace to Annytab.Doxservr.Fortnox.App and removed Unit from SupplierInvoiceRow.</PackageReleaseNotes>
+    <PackageReleaseNotes>Simplified code concerning import of supplier invoices.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/annytab/a-doxservr-fortnox</PackageProjectUrl>
-    <Version>1.0.9</Version>
+    <Version>1.1.0</Version>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
@@ -24,7 +24,7 @@
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Annytab.Dox.Standards" Version="1.0.4" />
     <PackageReference Include="Annytab.Doxservr.Client" Version="1.0.6" />
-    <PackageReference Include="Annytab.Fortnox.Client" Version="1.0.6" />
+    <PackageReference Include="Annytab.Fortnox.Client" Version="1.0.7" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="1.1.0" />
   </ItemGroup>
 

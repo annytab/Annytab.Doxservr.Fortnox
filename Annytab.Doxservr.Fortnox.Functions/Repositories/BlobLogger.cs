@@ -156,7 +156,7 @@ namespace Annytab.Doxservr.Fortnox.Functions
                 CloudBlob blob = (CloudBlob)item;
 
                 // Add the blob log
-                logs.Add(new BlobLog(blob.Properties.LastModified.Value.ToString("yyyy-MM-ddThh:mm:ss"), blob.Name));
+                logs.Add(new BlobLog(blob.Properties.LastModified.Value.ToString("yyyy-MM-ddTHH:mm:ss"), blob.Name));
             }
 
             // Return logs
